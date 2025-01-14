@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:padding="16dp"
+    android:background="@android:color/white">
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Send OTP"
+        android:textSize="24sp"
+        android:textStyle="bold"
+        android:layout_gravity="center"
+
+        android:textColor="@android:color/black" />
+
+    <EditText
+        android:id="@+id/editTextPhone"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:hint="Enter Phone Number"
+        android:inputType="phone"
+        android:maxLength="10"
+        android:padding="12dp"
+        android:background="@android:drawable/editbox_background"
+        android:layout_marginBottom="16dp" />
+
+    <Button
+        android:id="@+id/btnSendOTP"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Send OTP"
+        android:backgroundTint="@android:color/holo_blue_light"
+        android:textColor="@android:color/white"
+        android:padding="12dp" />
+</LinearLayout>

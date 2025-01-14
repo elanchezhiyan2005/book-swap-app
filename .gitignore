@@ -1,0 +1,15 @@
+# Ignore IntelliJ IDEA and Android Studio files
+.idea/
+*.iml
+
+# Ignore build files
+build/
+app/build/
+
+# Ignore local configuration files
+local.properties
+*.apk
+*.aar
+
+# Ignore Google services configuration
+app/google-services.json
