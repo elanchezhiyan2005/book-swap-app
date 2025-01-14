@@ -13,3 +13,9 @@ local.properties
 
 # Ignore Google services configuration
 app/google-services.json
+
+# Ignore Gradle files
+.gradle/
+
+# Ignore output directories
+/out/
