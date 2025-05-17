@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:padding="16dp"
+    tools:context=".ViewBooksActivity">
+
+    <!-- Location Request Message -->
+    <TextView
+        android:id="@+id/location_request_message"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Please enable location to view books near you"
+        android:visibility="gone"
+        android:gravity="center"
+        android:textSize="16sp"
+        android:textColor="@android:color/holo_red_dark"/>
+
+    <!-- Apply Distance Button -->
+    <Button
+        android:id="@+id/btn_apply_distance"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Apply Distance"
+        android:layout_marginBottom="16dp"/>
+
+    <!-- Search Bar -->
+    <SearchView
+        android:id="@+id/search_books"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:queryHint="Search by title or author"
+        android:iconifiedByDefault="false"
+        android:layout_marginBottom="16dp"/>
+
+    <!-- RecyclerView for Books -->
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/recyclerViewBooks"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="10dp"/>
+
+</LinearLayout>

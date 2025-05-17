@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string-array name="distance_options">
+        <item>Any Distance</item>
+        <item>Within 5 km</item>
+        <item>Within 10 km</item>
+        <item>Within 20 km</item>
+        <item>Within 50 km</item>
+    </string-array>
+</resources>

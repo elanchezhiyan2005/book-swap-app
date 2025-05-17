@@ -1,0 +1,13 @@
+# Android Studio and build files
+.idea/
+*.iml
+build/
+/build
+local.properties
+
+# Sensitive Firebase config files
+google-services.json
+
+# Miscellaneous
+*.log
+.DS_Store

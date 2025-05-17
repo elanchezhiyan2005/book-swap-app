@@ -1,0 +1,144 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:padding="16dp">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical">
+
+        <EditText
+            android:id="@+id/placeNameInput"
+            android:layout_width="match_parent"
+            android:layout_height="48dp"
+            android:hint="Enter your place name"
+            android:layout_marginBottom="16dp" />
+
+        <!-- Radio Buttons for ISBN -->
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Does your book have an ISBN code?"
+            android:textSize="16sp"
+            android:layout_marginBottom="8dp" />
+
+        <RadioGroup
+            android:id="@+id/isbnRadioGroup"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal">
+
+            <RadioButton
+                android:id="@+id/radioYes"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Yes" />
+
+            <RadioButton
+                android:id="@+id/radioNo"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="No" />
+        </RadioGroup>
+
+        <!-- ISBN Input Section -->
+        <LinearLayout
+            android:id="@+id/isbnFetchLayout"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:layout_marginTop="16dp"
+            android:visibility="gone">
+
+            <EditText
+                android:id="@+id/isbnInput"
+                android:layout_width="match_parent"
+                android:layout_height="48dp"
+                android:hint="Enter ISBN Code"
+                android:inputType="number"
+                android:layout_marginBottom="8dp" />
+
+            <Button
+                android:id="@+id/fetchDetailsButton"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Fetch Details" />
+        </LinearLayout>
+
+        <!-- Manual Input Section -->
+        <LinearLayout
+            android:id="@+id/manualInputLayout"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:layout_marginTop="16dp">
+
+            <EditText
+                android:id="@+id/titleInput"
+                android:layout_width="match_parent"
+                android:layout_height="48dp"
+                android:hint="Book Title"
+                android:layout_marginBottom="8dp" />
+
+            <EditText
+                android:id="@+id/authorInput"
+                android:layout_width="match_parent"
+                android:layout_height="48dp"
+                android:hint="Author"
+                android:layout_marginBottom="8dp" />
+
+            <EditText
+                android:id="@+id/publisherInput"
+                android:layout_width="match_parent"
+                android:layout_height="48dp"
+                android:hint="Publisher"
+                android:layout_marginBottom="8dp" />
+
+            <EditText
+                android:id="@+id/editionInput"
+                android:layout_width="match_parent"
+                android:layout_height="48dp"
+                android:hint="Edition"
+                android:layout_marginBottom="16dp" />
+
+            <EditText
+                android:id="@+id/yearInput"
+                android:layout_width="match_parent"
+                android:layout_height="48dp"
+                android:hint="Year of Publication"
+                android:inputType="number"
+                android:layout_marginBottom="8dp" />
+
+            <EditText
+                android:id="@+id/genreInput"
+                android:layout_width="match_parent"
+                android:layout_height="48dp"
+                android:hint="Genre"
+                android:layout_marginBottom="8dp" />
+        </LinearLayout>
+
+        <!-- Save and Cancel Buttons -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center">
+
+            <Button
+                android:id="@+id/saveButton"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Save"
+                android:layout_marginEnd="16dp" />
+
+            <Button
+                android:id="@+id/cancelButton"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Cancel" />
+        </LinearLayout>
+    </LinearLayout>
+</ScrollView>
