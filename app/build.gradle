@@ -2,12 +2,14 @@ plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.google.gms.google.services)
 }
+def MAPS_API_KEY = project.findProperty("MAPS_API_KEY") ?: ""
 
 android {
     namespace 'com.example.bookswapapp3'
     compileSdk 34
 
     defaultConfig {
+        resValue "string", "google_maps_key", MAPS_API_KEY
         applicationId "com.example.bookswapapp3"
         minSdk 24
         targetSdk 34

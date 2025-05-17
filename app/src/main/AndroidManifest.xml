@@ -17,7 +17,7 @@
 
     <meta-data
         android:name="com.google.android.geo.API_KEY"
-        android:value="AIzaSyCs9DUR1mobych1EBvIqZWPfqoKZ11oZRk"/>
+        android:value="@string/google_maps_key" />
 
     <application
         android:name=".BibliobantApplication"
