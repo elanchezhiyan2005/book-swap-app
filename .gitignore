@@ -8,6 +8,8 @@ local.properties
 # Sensitive Firebase config files
 google-services.json
 
+.gradle/
+
 # Miscellaneous
 *.log
 .DS_Store
