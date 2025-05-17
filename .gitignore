@@ -6,7 +6,7 @@ build/
 local.properties
 
 # Sensitive Firebase config files
-google-services.json
+app/google-services.json
 
 .gradle/
 
