@@ -14,6 +14,8 @@ import androidx.core.app.ActivityCompat;
 import com.google.android.gms.location.FusedLocationProviderClient;
 import com.google.android.gms.location.LocationServices;
 import com.google.firebase.firestore.FirebaseFirestore;
+
+import org.json.JSONArray;
 import org.json.JSONObject;
 import ch.hsr.geohash.GeoHash;
 import java.io.InputStreamReader;
@@ -35,6 +37,7 @@ public class AddNewBookActivity extends AppCompatActivity {
     private double latitude, longitude;
     private String userPhoneNumber;
     private ExecutorService executorService;
+    private String fetchedImageUrl;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -85,6 +88,7 @@ public class AddNewBookActivity extends AppCompatActivity {
                 authorInput.setEnabled(true);
                 publisherInput.setEnabled(true);
                 editionInput.setEnabled(true);
+                fetchedImageUrl = null;
             }
         });
 
@@ -170,8 +174,14 @@ public class AddNewBookActivity extends AppCompatActivity {
             return;
         }
 
-        // Set default image URL if ISBN is empty
-        String imageUrl = isbn.isEmpty() ? "https://via.placeholder.com/150" : "https://covers.openlibrary.org/b/isbn/" + isbn + "-L.jpg";
+        final String imageUrl;
+        if (fetchedImageUrl != null && !fetchedImageUrl.isEmpty()) {
+            imageUrl = fetchedImageUrl;
+        } else if (!isbn.isEmpty()) {
+            imageUrl = "https://covers.openlibrary.org/b/isbn/" + isbn + "-L.jpg";
+        } else {
+            imageUrl = "https://via.placeholder.com/150";
+        }
 
         // Save to Firestore in a background thread
         executorService.execute(() -> {
@@ -227,21 +237,24 @@ public class AddNewBookActivity extends AppCompatActivity {
     }
 
     private class FetchBookDetailsTask extends AsyncTask<String, Void, JSONObject> {
-        @Override
+       private String currentIsbn;
+       @Override
         protected JSONObject doInBackground(String... params) {
-            String isbn = params[0];
-            String apiUrl = "https://openlibrary.org/api/books?bibkeys=ISBN:" + isbn + "&format=json&jscmd=data";
+         currentIsbn = params[0];
+         String apiUrl = "https://www.googleapis.com/books/v1/volumes?q=isbn:" + currentIsbn +
+                "&key=" + BuildConfig.BOOKS_API_KEY;
+         Log.d("BOOKS_API_KEY", BuildConfig.BOOKS_API_KEY);
+
             try {
                 URL url = new URL(apiUrl);
                 HttpURLConnection connection = (HttpURLConnection) url.openConnection();
                 connection.setRequestMethod("GET");
-                connection.setConnectTimeout(5000); // 5s timeout
+                connection.setConnectTimeout(5000);
                 connection.setReadTimeout(5000);
                 connection.connect();
 
-                int responseCode = connection.getResponseCode();
-                if (responseCode != HttpURLConnection.HTTP_OK) {
-                    Log.e("FetchBookError", "API call failed with response code: " + responseCode);
+                if (connection.getResponseCode() != HttpURLConnection.HTTP_OK) {
+                    Log.e("FetchBookError", "API call failed: " + connection.getResponseCode());
                     return null;
                 }
 
@@ -254,42 +267,96 @@ public class AddNewBookActivity extends AppCompatActivity {
                 reader.close();
 
                 JSONObject jsonResponse = new JSONObject(response.toString());
-                return jsonResponse.optJSONObject("ISBN:" + isbn);
+                if (jsonResponse.has("items") && jsonResponse.getJSONArray("items").length() > 0) {
+                    return jsonResponse.getJSONArray("items")
+                            .getJSONObject(0)
+                            .getJSONObject("volumeInfo");
+                }
+                return null;
+
             } catch (Exception e) {
-                Log.e("FetchBookError", "Exception in fetching book details", e);
+                Log.e("FetchBookError", "Exception in fetching details", e);
                 return null;
             }
         }
 
         @Override
-        protected void onPostExecute(JSONObject bookData) {
-            if (bookData != null) {
-                titleInput.setText(bookData.optString("title", "Unknown Title"));
-                authorInput.setText(bookData.optJSONArray("authors") != null && bookData.optJSONArray("authors").length() > 0
-                        ? bookData.optJSONArray("authors").optJSONObject(0).optString("name", "Unknown Author")
-                        : "Unknown Author");
-                publisherInput.setText(bookData.optJSONArray("publishers") != null && bookData.optJSONArray("publishers").length() > 0
-                        ? bookData.optJSONArray("publishers").optJSONObject(0).optString("name", "Unknown Publisher")
-                        : "Unknown Publisher");
-                editionInput.setText(bookData.optString("edition", "Unknown Edition"));
+        protected void onPostExecute(JSONObject volumeInfo) {
+            try {
+                if (volumeInfo != null) {
+                    // Parse title
+                    titleInput.setText(volumeInfo.optString("title", "Unknown Title"));
 
-                // Make fields non-editable after successful fetch
-                titleInput.setEnabled(false);
-                authorInput.setEnabled(false);
-                publisherInput.setEnabled(false);
-                editionInput.setEnabled(false);
-            } else {
-                Toast.makeText(AddNewBookActivity.this, "Failed to fetch details. Enter manually.", Toast.LENGTH_LONG).show();
-                // Enable fields for manual entry
+                    // Parse authors
+                    if (volumeInfo.has("authors")) {
+                        JSONArray authors = volumeInfo.getJSONArray("authors");
+                        StringBuilder authorBuilder = new StringBuilder();
+                        for (int i = 0; i < authors.length(); i++) {
+                            if (i > 0) authorBuilder.append(", ");
+                            authorBuilder.append(authors.getString(i));
+                        }
+                        authorInput.setText(authorBuilder.toString());
+                    } else {
+                        authorInput.setText("Unknown Author");
+                    }
+
+                    // Parse publisher
+                    publisherInput.setText(volumeInfo.optString("publisher", "Unknown Publisher"));
+
+                    // Parse published date as edition
+                    String publishedDate = volumeInfo.optString("publishedDate", "");
+                    editionInput.setText(publishedDate.isEmpty() ?
+                            "Unknown Edition" : "Edition: " + publishedDate);
+
+                    // Handle image URL
+                    fetchedImageUrl = "https://via.placeholder.com/150";
+                    if (volumeInfo.has("imageLinks")) {
+                        JSONObject imageLinks = volumeInfo.getJSONObject("imageLinks");
+                        String thumbnail = imageLinks.optString("thumbnail", "");
+                        if (!thumbnail.isEmpty()) {
+                            fetchedImageUrl = thumbnail
+                                    .replace("http://", "https://")
+                                    .replace("&edge=curl", "");
+                        }
+                    }
+
+                    // Fallback to Open Library if needed
+                    if (fetchedImageUrl.equals("https://via.placeholder.com/150")) {
+                        fetchedImageUrl = "https://covers.openlibrary.org/b/isbn/" + currentIsbn + "-L.jpg";
+                    }
+
+                    // Lock fields
+                    titleInput.setEnabled(false);
+                    authorInput.setEnabled(false);
+                    publisherInput.setEnabled(false);
+                    editionInput.setEnabled(false);
+
+                } else {
+                    showManualEntryFallback();
+                }
+            } catch (Exception e) {
+                Log.e("ParseError", "Error parsing response", e);
+                showManualEntryFallback();
+            }
+        }
+
+        private void showManualEntryFallback() {
+            runOnUiThread(() -> {
+                Toast.makeText(AddNewBookActivity.this,
+                        "Failed to fetch details. Enter manually.",
+                        Toast.LENGTH_LONG).show();
+
                 titleInput.setEnabled(true);
                 authorInput.setEnabled(true);
                 publisherInput.setEnabled(true);
                 editionInput.setEnabled(true);
+
                 titleInput.setText("");
                 authorInput.setText("");
                 publisherInput.setText("");
                 editionInput.setText("");
-            }
+                fetchedImageUrl = null;
+            });
         }
     }
 

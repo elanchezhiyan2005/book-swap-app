@@ -17,67 +17,63 @@ public class HomeActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_home);
 
-        // Check if user is signed in
+        // Enhanced authentication check
         if (FirebaseAuth.getInstance().getCurrentUser() == null) {
-            startActivity(new Intent(this, SendOtpActivity.class));
-            finish();
+            redirectToAuthFlow();
             return;
         }
 
-        // Toolbar Section
-        Button homeButton = findViewById(R.id.homeButton);
-        Button profileButton = findViewById(R.id.profileButton);
-        Button logoutButton = findViewById(R.id.logoutButton);
+        setupUI();
+    }
 
-        // Buttons Section
+    private void setupUI() {
+        // Initialize all UI components
         Button addBookButton = findViewById(R.id.addBookButton);
         Button viewBooksButton = findViewById(R.id.viewBooksButton);
         Button messagesButton = findViewById(R.id.messagesButton);
+        Button logoutButton = findViewById(R.id.logoutButton);
 
-        // Button Click Listeners
-        addBookButton.setOnClickListener(v -> {
-            Intent intent = new Intent(HomeActivity.this, AddBookActivity.class);
-            startActivity(intent);
-        });
+        // Set click listeners
+        addBookButton.setOnClickListener(v ->
+                startActivity(new Intent(this, AddBookActivity.class)));
 
-        viewBooksButton.setOnClickListener(v -> {
-            Intent intent = new Intent(HomeActivity.this, ViewBooksActivity.class);
-            startActivity(intent);
-        });
+        viewBooksButton.setOnClickListener(v ->
+                startActivity(new Intent(this, ViewBooksActivity.class)));
 
-        messagesButton.setOnClickListener(v -> {
-            Intent intent = new Intent(HomeActivity.this, MessagesActivity.class);
-            startActivity(intent);
-        });
+        messagesButton.setOnClickListener(v ->
+                startActivity(new Intent(this, MessagesActivity.class)));
 
-        // Toolbar Button Click Listeners
-        homeButton.setOnClickListener(v ->
-                Toast.makeText(HomeActivity.this, "Home clicked", Toast.LENGTH_SHORT).show()
-        );
-        profileButton.setOnClickListener(v ->
-                Toast.makeText(HomeActivity.this, "Profile clicked", Toast.LENGTH_SHORT).show()
-        );
-
-        // Logout Button Click Listener
         logoutButton.setOnClickListener(v -> showLogoutDialog());
     }
 
     private void showLogoutDialog() {
-        AlertDialog.Builder builder = new AlertDialog.Builder(this);
-        builder.setTitle("Logout")
-                .setMessage("Do you want to logout?")
-                .setCancelable(false)
-                .setPositiveButton("OK", (dialog, which) -> {
-                    FirebaseAuth.getInstance().signOut(); // Sign out from Firebase
-                    SharedPreferences prefs = getSharedPreferences("BookSwapPrefs", MODE_PRIVATE);
-                    prefs.edit().remove("phoneNumber").apply(); // Clear stored phone number
-                    Intent intent = new Intent(HomeActivity.this, SendOtpActivity.class);
-                    startActivity(intent);
-                    finish();
-                })
-                .setNegativeButton("Cancel", (dialog, which) -> dialog.dismiss());
+        new AlertDialog.Builder(this)
+                .setTitle("Logout")
+                .setMessage("Are you sure you want to logout?")
+                .setPositiveButton("Yes", (dialog, which) -> performLogout())
+                .setNegativeButton("No", null)
+                .show();
+    }
 
-        AlertDialog alertDialog = builder.create();
-        alertDialog.show();
+    private void performLogout() {
+        // Clear authentication and preferences
+        FirebaseAuth.getInstance().signOut();
+        getSharedPreferences("BookSwapPrefs", MODE_PRIVATE)
+                .edit()
+                .clear()
+                .apply();
+
+        // Navigate to auth flow with clean stack
+        Intent intent = new Intent(this, SendOtpActivity.class);
+        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+        startActivity(intent);
+        finish();
+    }
+
+    private void redirectToAuthFlow() {
+        Intent intent = new Intent(this, SendOtpActivity.class);
+        intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
+        startActivity(intent);
+        finish();
     }
 }

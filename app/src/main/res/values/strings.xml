@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">BookSwap</string>
+    <string name="app_name">Bibliobant</string>
     <string name="home">Home</string>
     <string name="profile">Profile</string>
     <string name="logout">Logout</string>
@@ -7,4 +7,6 @@
     <string name="add_book">Add Book</string>
     <string name="view_books">View Books</string>
     <string name="messages">Messages</string>
+    <string name="app_slogan">Share books, spread knowledge</string>
+    <string name="app_logo">App Logo</string>
 </resources>

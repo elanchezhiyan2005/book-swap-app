@@ -2,14 +2,21 @@ plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.google.gms.google.services)
 }
-def MAPS_API_KEY = project.findProperty("MAPS_API_KEY") ?: ""
+
+def localProperties = new Properties()
+def localPropertiesFile = rootProject.file("local.properties")
+if (localPropertiesFile.exists()) {
+    localProperties.load(new FileInputStream(localPropertiesFile))
+}
+
+def BOOKS_API_KEY = localProperties['BOOKS_API_KEY']
 
 android {
     namespace 'com.example.bookswapapp3'
     compileSdk 34
 
     defaultConfig {
-        resValue "string", "google_maps_key", MAPS_API_KEY
+        buildConfigField "String", "BOOKS_API_KEY", "\"${BOOKS_API_KEY}\""
         applicationId "com.example.bookswapapp3"
         minSdk 24
         targetSdk 34
@@ -17,6 +24,10 @@ android {
         versionName "1.0"
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+    }
+
+    buildFeatures {
+        buildConfig true
     }
 
     buildTypes {
@@ -52,11 +63,6 @@ dependencies {
     implementation 'com.google.firebase:firebase-appcheck-playintegrity:17.0.0'
     implementation 'com.google.firebase:firebase-appcheck-debug:17.0.0'
     implementation 'com.google.android.recaptcha:recaptcha:18.2.1'
-
-
-
-
-
 
 
 }

@@ -82,14 +82,21 @@ public class VerifyOtpActivity extends AppCompatActivity {
             }
         });
 
+        // Save session state with both flag and phone number
         SharedPreferences prefs = getSharedPreferences("BookSwapPrefs", MODE_PRIVATE);
-        prefs.edit().putString("phoneNumber", phoneNumber).apply();
+        prefs.edit()
+                .putBoolean("isLoggedIn", true)  // Added login flag
+                .putString("phoneNumber", phoneNumber)
+                .apply();
 
-        startActivity(new Intent(this, HomeActivity.class));
+        // Clear back stack and launch HomeActivity
+        Intent intent = new Intent(this, HomeActivity.class);
+        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+        startActivity(intent);
         finish();
     }
 
-    @SuppressLint("MissingSuperCall")
+
     @Override
     public void onBackPressed() {
         Intent intent = new Intent(this, SendOtpActivity.class);

@@ -2,4 +2,5 @@
     <color name="white">#FFFFFF</color>
     <color name="black">#000000</color>
     <color name="orange">#FF5722</color>
+    <color name="splash_background">#6200EE</color> <!-- Purple theme color -->
 </resources>

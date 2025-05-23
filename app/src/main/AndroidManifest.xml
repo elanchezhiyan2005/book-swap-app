@@ -1,23 +1,17 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools">
-
-
     <!-- Location Permissions -->
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
-    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
-
-    <!-- Background Location Permission (Only if needed) -->
+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" /> <!-- Background Location Permission (Only if needed) -->
     <uses-permission android:name="android.permission.ACCESS_BACKGROUND_LOCATION" />
     <uses-permission android:name="android.permission.RECEIVE_SMS" />
     <uses-permission android:name="android.permission.READ_SMS" />
-    <uses-feature android:name="android.hardware.telephony" android:required="false" />
 
-
-    <meta-data
-        android:name="com.google.android.geo.API_KEY"
-        android:value="@string/google_maps_key" />
+    <uses-feature
+        android:name="android.hardware.telephony"
+        android:required="false" />
 
     <application
         android:name=".BibliobantApplication"
@@ -32,11 +26,14 @@
         tools:targetApi="29">
 
         <activity
-            android:name=".ViewBookAdapter"
-            android:exported="false" />
-        <activity
-            android:name=".BookAdapter"
-            android:exported="false" />
+            android:name=".SplashActivity"
+            android:exported="true"
+            android:theme="@style/SplashTheme">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
         <activity
             android:name=".AddNewBookActivity"
             android:exported="false" />
@@ -51,12 +48,7 @@
             android:exported="false" />
         <activity
             android:name=".SendOtpActivity"
-            android:exported="true">
-            <intent-filter>
-                <action android:name="android.intent.action.MAIN" />
-                <category android:name="android.intent.category.LAUNCHER" />
-            </intent-filter>
-        </activity>
+            android:exported="false" />
         <activity
             android:name=".HomeActivity"
             android:exported="false" />
