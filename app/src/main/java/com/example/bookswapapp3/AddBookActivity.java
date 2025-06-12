@@ -3,34 +3,23 @@ package com.example.bookswapapp3;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
-import android.view.View;
 import android.widget.Button;
-import android.widget.TextView;
+import android.widget.ImageButton;
 import android.widget.Toast;
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.recyclerview.widget.LinearLayoutManager;
-import androidx.recyclerview.widget.RecyclerView;
-import com.google.firebase.firestore.FirebaseFirestore;
-import com.google.firebase.firestore.QueryDocumentSnapshot;
-import java.util.ArrayList;
-import java.util.List;
+import com.google.android.material.bottomnavigation.BottomNavigationView;
 
 public class AddBookActivity extends AppCompatActivity {
 
-    private RecyclerView bookRecyclerView;
-    private TextView emptyStateMessage;
-    private BookAdapter bookAdapter;
-    private List<Book> bookList;
-    private FirebaseFirestore db;
+    private Button addNewBookButton;
+    private ImageButton backButton;
+    private ImageButton helpButton;
     private String userPhoneNumber;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_add_book);
-
-        // Initialize Firestore
-        db = FirebaseFirestore.getInstance();
 
         // Get user's phone number from SharedPreferences
         SharedPreferences prefs = getSharedPreferences("BookSwapPrefs", MODE_PRIVATE);
@@ -41,84 +30,37 @@ public class AddBookActivity extends AppCompatActivity {
             return;
         }
 
-        // Toolbar Buttons
-        Button backButton = findViewById(R.id.backButton);
-        Button addBookButton = findViewById(R.id.addBookButton);
+        setupUI();
+    }
 
-        // RecyclerView and Empty State Message
-        bookRecyclerView = findViewById(R.id.bookRecyclerView);
-        emptyStateMessage = findViewById(R.id.emptyStateMessage);
+    private void setupUI() {
+        // Initialize UI components
+        addNewBookButton = findViewById(R.id.addNewBookButton);
+        backButton = findViewById(R.id.backButton);
+        helpButton = findViewById(R.id.helpButton);
 
-        // Initialize Book List
-        bookList = new ArrayList<>();
+        // Setup Bottom Navigation
+        BottomNavigationView bottomNavigationView = findViewById(R.id.bottomNavigationView);
+        NavigationUtils.setupBottomNavigation(this, bottomNavigationView, R.id.nav_add);
 
-        // Setup RecyclerView
-        bookAdapter = new BookAdapter(bookList, userPhoneNumber); // Pass userPhoneNumber
-        bookRecyclerView.setLayoutManager(new LinearLayoutManager(this));
-        bookRecyclerView.setAdapter(bookAdapter);
+        // Add New Book Button
+        addNewBookButton.setOnClickListener(v -> {
+            Intent intent = new Intent(this, AddNewBookActivity.class);
+            intent.putExtra("phoneNumber", userPhoneNumber);
+            startActivityForResult(intent, 1);
+        });
 
-        // Fetch books from Firestore
-        fetchUserBooks();
-
-        // Toolbar Button Actions
+        // Back Button
         backButton.setOnClickListener(v -> {
-            Intent intent = new Intent(AddBookActivity.this, HomeActivity.class);
+            Intent intent = new Intent(this, HomeActivity.class);
+            intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
             startActivity(intent);
             finish();
         });
 
-        addBookButton.setOnClickListener(v -> {
-            Intent intent = new Intent(AddBookActivity.this, AddNewBookActivity.class);
-            intent.putExtra("phoneNumber", userPhoneNumber);
-            startActivityForResult(intent, 1);
+        // Help Button (placeholder)
+        helpButton.setOnClickListener(v -> {
+            Toast.makeText(this, "Help: Use this page to add a new book to your collection.", Toast.LENGTH_LONG).show();
         });
-    }
-
-    private void fetchUserBooks() {
-        if (userPhoneNumber == null) {
-            Toast.makeText(this, "User not found", Toast.LENGTH_SHORT).show();
-            return;
-        }
-
-        db.collection("users")
-                .document(userPhoneNumber)
-                .collection("books")
-                .addSnapshotListener((value, error) -> {
-                    if (error != null) {
-                        Toast.makeText(this, "Error fetching books", Toast.LENGTH_SHORT).show();
-                        return;
-                    }
-
-                    if (value != null) {
-                        bookList.clear();
-                        for (QueryDocumentSnapshot document : value) {
-                            String isbn = document.getId(); // Get ISBN from document ID
-                            String title = document.getString("title");
-                            String author = document.getString("author");
-                            String publisher = document.getString("publisher");
-                            String edition = document.getString("edition");
-                            String imageUrl = document.getString("imageUrl");
-                            bookList.add(new Book(title, author, publisher, edition, imageUrl, isbn));
-                        }
-                        bookAdapter.notifyDataSetChanged();
-                        updateUI();
-                    }
-                });
-    }
-
-    @Override
-    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-        super.onActivityResult(requestCode, resultCode, data);
-        // Firestore listener updates UI automatically
-    }
-
-    private void updateUI() {
-        if (bookList.isEmpty()) {
-            emptyStateMessage.setVisibility(View.VISIBLE);
-            bookRecyclerView.setVisibility(View.GONE);
-        } else {
-            emptyStateMessage.setVisibility(View.GONE);
-            bookRecyclerView.setVisibility(View.VISIBLE);
-        }
     }
 }

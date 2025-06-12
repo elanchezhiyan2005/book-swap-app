@@ -16,9 +16,9 @@ public class BookModel {
     private double distance;
     private String userPhoneNumber;
     private String formattedDistance;
-    private Map<String, Object> location; // Added to match Firestore
+    private String action; // Added for Swap/Borrow/Buy
+    private Map<String, Object> location;
 
-    // Empty constructor required for Firestore
     public BookModel() {}
 
     public BookModel(String isbn, String title, String author, String edition, String publisher,
@@ -35,7 +35,6 @@ public class BookModel {
         this.longitude = longitude;
     }
 
-    // Getters and Setters
     public String getIsbn() { return isbn; }
     public void setIsbn(String isbn) { this.isbn = isbn; }
     public String getTitle() { return title; }
@@ -62,8 +61,8 @@ public class BookModel {
     public void setFormattedDistance(String formattedDistance) { this.formattedDistance = formattedDistance; }
     public String getUserPhoneNumber() { return userPhoneNumber; }
     public void setUserPhoneNumber(String userPhoneNumber) { this.userPhoneNumber = userPhoneNumber; }
-
-    // Added for Firestore mapping
+    public String getAction() { return action; }
+    public void setAction(String action) { this.action = action; }
     public Map<String, Object> getLocation() { return location; }
     public void setLocation(Map<String, Object> location) {
         this.location = location;

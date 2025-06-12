@@ -1,45 +1,64 @@
+<?xml version="1.0" encoding="utf-8"?>
 <LinearLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:orientation="vertical"
-    android:padding="16dp">
+    android:orientation="horizontal"
+    android:paddingHorizontal="16dp"
+    android:paddingVertical="12dp"
+    android:background="@color/background"
+    android:gravity="center_vertical">
 
-    <TextView
-        android:id="@+id/titleText"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="Book Title"
-        android:textStyle="bold"
-        android:textSize="16sp"
-        android:paddingBottom="4dp" />
-
-    <TextView
-        android:id="@+id/authorText"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="Author"
-        android:textSize="14sp"
-        android:paddingBottom="2dp" />
-
-    <TextView
-        android:id="@+id/publisherText"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="Publisher"
-        android:textSize="14sp" />
-
+    <!-- Book Image -->
     <ImageView
         android:id="@+id/bookImageView"
-        android:layout_width="100dp"
-        android:layout_height="150dp"
-        android:scaleType="fitXY"
-        android:src="@drawable/placeholder_image"/>
+        android:layout_width="70dp"
+        android:layout_height="93dp"
+        android:scaleType="centerCrop"
+        android:background="@android:color/transparent"
+        android:layout_marginEnd="16dp" />
+
+    <!-- Book Details -->
+    <LinearLayout
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_weight="1"
+        android:orientation="vertical">
+
+        <TextView
+            android:id="@+id/titleText"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Book Title"
+            android:textSize="16sp"
+            style="@style/TextPrimary" />
+
+        <TextView
+            android:id="@+id/authorText"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Author"
+            android:textSize="14sp"
+            style="@style/TextPrimary" />
+
+        <TextView
+            android:id="@+id/publisherText"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Action (Swap/Sell/Lend)"
+            android:textSize="14sp"
+            style="@style/TextPrimary" />
+    </LinearLayout>
+
+    <!-- Delete Icon -->
     <Button
         android:id="@+id/deleteButton"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Delete"
-        android:textSize="14sp" />
-
+        android:layout_width="28dp"
+        android:layout_height="28dp"
+        android:background="@android:color/transparent"
+        android:backgroundTint="@android:color/transparent"
+        android:text=""
+        android:drawableTop="@drawable/ic_trash"
+        android:contentDescription="Delete Book"
+        android:scaleType="fitCenter" />
 </LinearLayout>

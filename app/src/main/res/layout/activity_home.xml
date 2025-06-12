@@ -1,45 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
 <LinearLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
-    android:background="@color/white">
+    android:background="@color/background">
 
-    <!-- Toolbar -->
+    <!-- Header -->
     <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="60dp"
-        android:layout_marginBottom="36dp"
-        android:background="@color/orange"
-        android:orientation="horizontal"> <!-- Added margin below toolbar -->
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:background="@color/background"
+        android:padding="16dp"
+        android:paddingBottom="8dp">
+
+        <!-- Title -->
+
+        <!-- Logout Button -->
 
         <TextView
-            android:id="@+id/appName"
-            android:layout_width="0dp"
+            style="@style/TextPrimary"
+            android:layout_width="232dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:gravity="center_vertical"
-            android:text="BookSwap"
-            android:textColor="@color/white"
-            android:textSize="25sp"
-            android:textStyle="bold" />
-
-        <Button
-            android:id="@+id/homeButton"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:background="@android:color/transparent"
-            android:text="Home"
-            android:textColor="@color/white"
-            android:textStyle="bold" />
-
-        <Button
-            android:id="@+id/profileButton"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:background="@android:color/transparent"
-            android:text="Profile"
-            android:textColor="@color/white"
+            android:gravity="center"
+            android:text="BiblioBant"
+            android:textSize="18sp"
             android:textStyle="bold" />
 
         <Button
@@ -48,55 +36,89 @@
             android:layout_height="wrap_content"
             android:background="@android:color/transparent"
             android:text="Logout"
-            android:textColor="@color/white"
-            android:textStyle="bold" />
+            android:textSize="16sp"
+            style="@style/TextPrimary" />
     </LinearLayout>
 
-    <!-- Welcome Text -->
-    <TextView
-        android:id="@+id/welcomeText"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Welcome!"
-        android:textSize="24sp"
-        android:textStyle="bold"
-        android:layout_gravity="center_horizontal"
-        android:paddingTop="16dp"
-        android:paddingBottom="32dp"
-        android:textColor="@color/black" />
+    <!-- Content Section -->
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1">
 
-    <!-- Buttons Section -->
+        <!-- RecyclerView for Book List -->
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/bookRecyclerView"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:visibility="gone" />
+
+        <!-- Empty State Placeholder -->
+        <LinearLayout
+            android:id="@+id/emptyStateLayout"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:gravity="center"
+            android:padding="16dp"
+            android:layout_centerInParent="true"
+            android:background="@drawable/dashed_border"
+            android:paddingHorizontal="24dp"
+            android:paddingVertical="56dp"
+            android:visibility="visible">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Welcome! Add your first book to start sharing."
+                android:textSize="18sp"
+                android:textStyle="bold"
+                android:gravity="center"
+                style="@style/TextPrimary"
+                android:layout_marginBottom="8dp" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Browse books from other users or add your own to swap, lend, or sell."
+                android:textSize="14sp"
+                android:gravity="center"
+                style="@style/TextPrimary"
+                android:layout_marginBottom="16dp" />
+
+            <Button
+                android:id="@+id/addBookPlaceholderButton"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Add Book"
+                style="@style/ButtonLight" />
+        </LinearLayout>
+    </RelativeLayout>
+
+    <!-- Bottom Navigation -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="vertical"
-        android:gravity="center_horizontal"
-        android:layout_marginTop="16dp">
+        android:orientation="vertical">
 
-        <Button
-            android:id="@+id/addBookButton"
-            android:layout_width="200dp"
+        <com.google.android.material.bottomnavigation.BottomNavigationView
+            android:id="@+id/bottomNavigationView"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="Add Book"
-            android:textColor="@color/white"
-            android:background="@drawable/rounded_button"
-            android:layout_marginBottom="16dp" />
+            android:background="@color/background"
+            app:menu="@menu/bottom_nav_menu"
+            app:itemIconTint="@drawable/nav_item_color_selector"
+            app:itemTextColor="@drawable/nav_item_color_selector"
+            app:itemBackground="@android:color/transparent"
+            app:labelVisibilityMode="labeled"
+            android:paddingHorizontal="16dp"
+            android:paddingTop="8dp"
+            android:paddingBottom="12dp" />
 
-        <Button
-            android:id="@+id/viewBooksButton"
-            android:layout_width="200dp"
-            android:layout_height="wrap_content"
-            android:text="View Books"
-            android:textColor="@color/white"
-            android:background="@drawable/rounded_button"
-            android:layout_marginBottom="16dp" />
-
-        <Button
-            android:id="@+id/messagesButton"
-            android:layout_width="200dp"
-            android:layout_height="wrap_content"
-            android:text="Messages"
-            android:textColor="@color/white"
-            android:background="@drawable/rounded_button" />
+        <!-- Safe Area -->
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="20dp"
+            android:background="@color/background" />
     </LinearLayout>
 </LinearLayout>

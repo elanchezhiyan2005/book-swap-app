@@ -3,8 +3,8 @@
 
     <style name="Base.Theme.BookSwapapp3" parent="Theme.Material3.DayNight.NoActionBar">
 
-        <item name="colorPrimary">@color/orange</item>
-        <item name="colorPrimaryContainer">@color/orange</item>
+        <item name="colorPrimary">@color/button_blue</item>
+        <item name="colorPrimaryContainer">@color/button_blue</item>
         <item name="colorOnPrimary">@color/white</item>
         <item name="colorSecondary">@color/black</item>
         <item name="colorSurface">@color/white</item>
@@ -25,6 +25,42 @@
     <style name="SplashAnimation">
         <item name="android:windowEnterAnimation">@android:anim/fade_in</item>
         <item name="android:windowExitAnimation">@android:anim/fade_out</item>
+    </style>
+    <style name="OtpEditTextStyle">
+        <item name="android:background">@drawable/otp_input_box</item>
+        <item name="android:backgroundTint">@null</item>
+        <item name="android:foreground">?android:attr/selectableItemBackground</item>
+    </style>
+    <style name="TextPrimary">
+        <item name="android:textColor">@color/text_primary</item>
+        <item name="android:fontFamily">sans-serif</item>
+    </style>
+
+    <style name="TextSecondary">
+        <item name="android:textColor">@color/text_secondary</item>
+        <item name="android:fontFamily">sans-serif</item>
+    </style>
+
+    <style name="ButtonAddNewBook">
+        <item name="android:background">@color/button_add_new_book</item>
+        <item name="android:textColor">@color/white</item>
+        <item name="android:textSize">16sp</item>
+        <item name="android:textStyle">bold</item>
+        <item name="android:paddingStart">20dp</item>
+        <item name="android:paddingEnd">20dp</item>
+        <item name="android:layout_height">48dp</item>
+        <item name="android:drawableStart">@drawable/ic_plus</item>
+        <item name="android:drawablePadding">8dp</item>
+    </style>
+
+    <style name="ButtonLight">
+        <item name="android:background">@color/button_light</item>
+        <item name="android:textColor">@color/text_primary</item>
+        <item name="android:textSize">14sp</item>
+        <item name="android:textStyle">bold</item>
+        <item name="android:layout_height">40dp</item>
+        <item name="android:paddingStart">16dp</item>
+        <item name="android:paddingEnd">16dp</item>
     </style>
 
 </resources>

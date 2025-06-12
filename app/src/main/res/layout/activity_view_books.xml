@@ -1,47 +1,171 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout
+<RelativeLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:orientation="vertical"
-    android:padding="16dp"
+    android:background="#f8f8fc"
     tools:context=".ViewBooksActivity">
 
-    <!-- Location Request Message -->
-    <TextView
-        android:id="@+id/location_request_message"
+    <!-- Header -->
+    <LinearLayout
+        android:id="@+id/headerLayout"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="Please enable location to view books near you"
-        android:visibility="gone"
-        android:gravity="center"
-        android:textSize="16sp"
-        android:textColor="@android:color/holo_red_dark"/>
+        android:orientation="horizontal"
+        android:padding="16dp"
+        android:background="#f8f8fc"
+        android:gravity="center_vertical">
 
-    <!-- Apply Distance Button -->
-    <Button
-        android:id="@+id/btn_apply_distance"
+        <!-- Back Arrow -->
+        <ImageButton
+            android:id="@+id/backButton"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
+            android:background="@android:color/transparent"
+            android:src="@drawable/ic_arrow_left"
+            android:contentDescription="Back to Home"
+            android:tint="#0d0d1c"
+            android:padding="12dp" />
+
+        <TextView
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="Browse Books"
+            android:textSize="18sp"
+            android:textStyle="bold"
+            android:textColor="#0d0d1c"
+            android:gravity="center" />
+    </LinearLayout>
+
+    <!-- Main Content -->
+    <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="Apply Distance"
-        android:layout_marginBottom="16dp"/>
+        android:layout_height="match_parent"
+        android:layout_below="@id/headerLayout"
+        android:layout_above="@id/bottomNavigation"
+        android:orientation="vertical">
 
-    <!-- Search Bar -->
-    <SearchView
-        android:id="@+id/search_books"
+        <!-- Search Bar -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:paddingHorizontal="16dp"
+            android:paddingVertical="12dp">
+
+            <EditText
+                android:id="@+id/searchEditText"
+                android:layout_width="match_parent"
+                android:layout_height="48dp"
+                android:background="@drawable/search_background"
+                android:drawableStart="@drawable/ic_search"
+                android:drawableTint="#4b489d"
+                android:paddingStart="40dp"
+                android:paddingEnd="16dp"
+                android:hint="Search by title or author"
+                android:textColor="#0d0d1c"
+                android:textColorHint="#4b489d"
+                android:textSize="16sp"
+                android:inputType="text" />
+        </LinearLayout>
+
+        <!-- Filter Section -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:paddingHorizontal="16dp"
+            android:paddingVertical="12dp"
+            android:gravity="center_vertical">
+
+            <Spinner
+                android:id="@+id/actionSpinner"
+                android:layout_width="0dp"
+                android:layout_height="56dp"
+                android:layout_weight="1"
+                android:background="@drawable/spinner_background"
+                android:padding="15dp"
+                android:spinnerMode="dropdown" />
+
+            <!-- Distance Spinner -->
+            <Spinner
+                android:id="@+id/distanceSpinner"
+                android:layout_width="0dp"
+                android:layout_height="56dp"
+                android:layout_weight="1"
+                android:layout_marginStart="16dp"
+                android:background="@drawable/spinner_background"
+                android:padding="15dp"
+                android:spinnerMode="dropdown" />
+        </LinearLayout>
+
+        <!-- Apply Filters Button -->
+        <Button
+            android:id="@+id/btn_apply_filters"
+            android:layout_width="wrap_content"
+            android:layout_height="40dp"
+            android:layout_gravity="center"
+            android:layout_marginVertical="12dp"
+            android:background="@drawable/button_background"
+            android:text="Apply Filters"
+            android:textSize="14sp"
+            android:textStyle="bold"
+            android:textColor="#f8f8fc"
+            android:paddingHorizontal="16dp" />
+
+        <!-- RecyclerView for Books -->
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/recyclerViewBooks"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1"
+            android:padding="16dp"
+            android:clipToPadding="false"
+            android:scrollbars="vertical"
+            android:animationCache="true" />
+    </LinearLayout>
+
+    <!-- Loading Overlay -->
+    <FrameLayout
+        android:id="@+id/loadingOverlay"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:queryHint="Search by title or author"
-        android:iconifiedByDefault="false"
-        android:layout_marginBottom="16dp"/>
+        android:layout_height="match_parent"
+        android:background="#80000000"
+    android:visibility="gone">
 
-    <!-- RecyclerView for Books -->
-    <androidx.recyclerview.widget.RecyclerView
-        android:id="@+id/recyclerViewBooks"
-        android:layout_width="match_parent"
+    <ProgressBar
+        android:id="@+id/loadingProgressBar"
+        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginTop="10dp"/>
+        android:layout_gravity="center"
+        android:indeterminateTint="#A3BFFA"
+    android:visibility="gone" />
+</FrameLayout>
 
-</LinearLayout>
+    <!-- Error Message -->
+<TextView
+android:id="@+id/errorMessage"
+android:layout_width="match_parent"
+android:layout_height="wrap_content"
+android:layout_centerInParent="true"
+android:gravity="center"
+android:text="No books found within the selected distance 😢"
+android:textSize="16sp"
+android:textColor="#0d0d1c"
+android:visibility="gone" />
+
+    <!-- Bottom Navigation -->
+<com.google.android.material.bottomnavigation.BottomNavigationView
+android:id="@+id/bottomNavigation"
+android:layout_width="match_parent"
+android:layout_height="wrap_content"
+android:layout_alignParentBottom="true"
+android:background="#f8f8fc"
+app:itemIconTint="@drawable/bottom_nav_icon_tint"
+app:itemTextColor="@drawable/bottom_nav_icon_tint"
+app:menu="@menu/bottom_nav_menu"
+app:labelVisibilityMode="labeled" />
+    </RelativeLayout>

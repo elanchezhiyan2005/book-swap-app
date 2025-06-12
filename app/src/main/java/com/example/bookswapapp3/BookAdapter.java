@@ -4,8 +4,8 @@ import android.content.Context;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.ImageView;
 import android.widget.Button;
+import android.widget.ImageView;
 import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AlertDialog;
@@ -18,11 +18,11 @@ import android.widget.Toast;
 public class BookAdapter extends RecyclerView.Adapter<BookAdapter.BookViewHolder> {
 
     private final List<Book> bookList;
-    private String userPhoneNumber; // To know which user's books to delete
+    private String userPhoneNumber;
     private FirebaseFirestore db;
     private Context context;
 
-    public BookAdapter(List<Book> bookList,String userPhoneNumber) {
+    public BookAdapter(List<Book> bookList, String userPhoneNumber) {
         this.bookList = bookList;
         this.userPhoneNumber = userPhoneNumber;
         this.db = FirebaseFirestore.getInstance();
@@ -41,14 +41,15 @@ public class BookAdapter extends RecyclerView.Adapter<BookAdapter.BookViewHolder
         Book book = bookList.get(position);
         holder.titleText.setText(book.getTitle());
         holder.authorText.setText(book.getAuthor());
-        holder.publisherText.setText(book.getPublisher());
+        holder.publisherText.setText(book.getAction()); // Display action instead of publisher
 
         // Load book image using Glide
         Glide.with(holder.itemView.getContext())
                 .load(book.getImageUrl())
-                .placeholder(R.drawable.placeholder_image) // Placeholder while loading
-                .error(R.drawable.error_image) // Image to display if loading fails
+                .placeholder(R.drawable.placeholder_image)
+                .error(R.drawable.error_image)
                 .into(holder.bookImageView);
+
         // Delete button click listener
         holder.deleteButton.setOnClickListener(v -> {
             if (userPhoneNumber == null) {
@@ -68,14 +69,12 @@ public class BookAdapter extends RecyclerView.Adapter<BookAdapter.BookViewHolder
                                 .delete()
                                 .addOnSuccessListener(aVoid -> {
                                     Toast.makeText(context, "Book deleted successfully!", Toast.LENGTH_SHORT).show();
-                                    // Firestore listener in AddBookActivity will update the UI
                                 })
                                 .addOnFailureListener(e -> {
                                     Toast.makeText(context, "Failed to delete book: " + e.getMessage(), Toast.LENGTH_SHORT).show();
                                 });
                     })
                     .setNegativeButton("No", (dialog, which) -> {
-                        // User canceled, do nothing
                         dialog.dismiss();
                     })
                     .setIcon(android.R.drawable.ic_dialog_alert)
@@ -91,7 +90,7 @@ public class BookAdapter extends RecyclerView.Adapter<BookAdapter.BookViewHolder
     static class BookViewHolder extends RecyclerView.ViewHolder {
         TextView titleText, authorText, publisherText;
         ImageView bookImageView;
-        Button deleteButton;// Added ImageView for book cover
+        Button deleteButton;
 
         public BookViewHolder(@NonNull View itemView) {
             super(itemView);
@@ -99,7 +98,7 @@ public class BookAdapter extends RecyclerView.Adapter<BookAdapter.BookViewHolder
             authorText = itemView.findViewById(R.id.authorText);
             publisherText = itemView.findViewById(R.id.publisherText);
             bookImageView = itemView.findViewById(R.id.bookImageView);
-            deleteButton = itemView.findViewById(R.id.deleteButton);// ImageView in layout
+            deleteButton = itemView.findViewById(R.id.deleteButton);
         }
     }
 }

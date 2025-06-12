@@ -8,18 +8,19 @@ public class Book {
     private String edition;
     private String imageUrl;
     private String isbn;
-
+    private String action;
 
     // Required empty constructor for Firestore
     public Book() {}
 
-    public Book(String title, String author, String publisher, String edition, String imageUrl,String isbn) {
+    public Book(String title, String author, String publisher, String edition, String imageUrl,String isbn,String action) {
         this.title = title;
         this.author = author;
         this.publisher = publisher;
         this.edition = edition;
         this.imageUrl = imageUrl;
         this.isbn = isbn;
+        this.action = action;
 
     }
 
@@ -37,7 +38,7 @@ public class Book {
     public String getImageUrl() { return imageUrl; }
     public void setImageUrl(String imageUrl) { this.imageUrl = imageUrl; }
     public String getIsbn() { return isbn; } // Added
-
+    public String getAction() { return action; }
     // Setters (if needed)
     public void setIsbn(String isbn) { this.isbn = isbn; }
 

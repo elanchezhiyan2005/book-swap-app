@@ -1,10 +1,14 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <string-array name="action_options">
+        <item>All</item>
+        <item>Swap</item>
+        <item>Lend</item>
+        <item>Buy</item>
+    </string-array>
     <string-array name="distance_options">
-        <item>Any Distance</item>
-        <item>Within 5 km</item>
-        <item>Within 10 km</item>
-        <item>Within 20 km</item>
-        <item>Within 50 km</item>
+        <item>2km</item>
+        <item>5km</item>
+        <item>10km</item>
     </string-array>
 </resources>

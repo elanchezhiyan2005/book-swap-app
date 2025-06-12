@@ -4,29 +4,119 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
-    android:padding="16dp">
+    android:background="#f8fafc">
 
-    <EditText
-        android:id="@+id/phoneInput"
-        android:layout_width="match_parent"
-        android:layout_height="48dp"
-        android:hint="Enter Phone Number"
-        android:inputType="phone"
-        android:padding="10dp"
-        android:layout_marginBottom="16dp" />
-
-    <Button
-        android:id="@+id/sendOtpButton"
+    <!-- Header Section -->
+    <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="Send OTP"
-        android:backgroundTint="@color/design_default_color_primary"
-        android:textColor="@android:color/white" />
+        android:orientation="horizontal"
+        android:padding="16dp"
+        android:paddingBottom="8dp"
+        android:background="#f8fafc"
+        android:gravity="center_vertical">
 
+        <!-- Title -->
+        <TextView
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="BiblioBant"
+            android:textSize="18sp"
+            android:textStyle="bold"
+            android:textColor="#0d141c"
+            android:gravity="center"
+            android:paddingStart="48dp" />
+
+        <!-- Question Mark Icon Button -->
+        <ImageButton
+            android:id="@+id/helpButton"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
+            android:background="@android:color/transparent"
+            android:src="@drawable/ic_question"
+            android:contentDescription="Help"
+            android:padding="12dp"
+            android:scaleType="fitCenter" />
+    </LinearLayout>
+
+    <!-- Welcome Text -->
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Welcome to BiblioBant"
+        android:textSize="28sp"
+        android:textStyle="bold"
+        android:textColor="#0d141c"
+        android:gravity="center"
+        android:paddingHorizontal="16dp"
+        android:paddingTop="20dp"
+        android:paddingBottom="12dp" />
+
+    <!-- Phone Number Input -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:paddingHorizontal="16dp"
+        android:paddingVertical="12dp">
+
+        <EditText
+            android:id="@+id/phoneInput"
+            android:layout_width="match_parent"
+            android:layout_height="56dp"
+            android:hint="Enter your phone number"
+            android:inputType="phone"
+            android:background="@drawable/edit_text_background"
+            android:padding="16dp"
+            android:textSize="16sp"
+            android:textColor="#0d141c"
+            android:textColorHint="#49739c"
+            android:fontFamily="sans-serif" />
+    </LinearLayout>
+
+    <!-- Instruction Text -->
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="We'll send you a verification code"
+        android:textSize="14sp"
+        android:textColor="#49739c"
+        android:gravity="center"
+        android:paddingHorizontal="16dp"
+        android:paddingTop="4dp"
+        android:paddingBottom="12dp" />
+
+    <!-- Spacer to push the button to the bottom -->
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1" />
+
+    <!-- Send OTP Button -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:paddingHorizontal="16dp"
+        android:paddingVertical="12dp">
+
+        <Button
+            android:id="@+id/sendOtpButton"
+            android:layout_width="match_parent"
+            android:layout_height="48dp"
+            android:text="Send OTP"
+            android:textSize="16sp"
+            android:textStyle="bold"
+            android:textColor="#ffffff"
+            android:background="@drawable/button_background"
+            android:backgroundTint="@null" />
+    </LinearLayout>
+
+    <!-- ProgressBar -->
     <ProgressBar
         android:id="@+id/progressBar"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_gravity="center"
-        android:visibility="gone" />
+        android:visibility="gone"
+        android:layout_marginBottom="16dp" />
 </LinearLayout>

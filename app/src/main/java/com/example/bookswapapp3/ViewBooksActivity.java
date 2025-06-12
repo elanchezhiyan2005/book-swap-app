@@ -9,14 +9,21 @@ import android.location.LocationManager;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
+import android.text.Editable;
+import android.text.TextWatcher;
 import android.util.Log;
 import android.view.View;
+import android.view.animation.OvershootInterpolator;
+import android.widget.AdapterView;
+import android.widget.ArrayAdapter;
 import android.widget.Button;
-import android.widget.RadioButton;
-import android.widget.SearchView;
+import android.widget.EditText;
+import android.widget.ImageButton;
+import android.widget.ProgressBar;
+import android.widget.Spinner;
+import android.widget.TextView;
 import android.widget.Toast;
 import androidx.annotation.NonNull;
-import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 import androidx.recyclerview.widget.LinearLayoutManager;
@@ -27,6 +34,7 @@ import com.google.android.gms.location.LocationRequest;
 import com.google.android.gms.location.LocationResult;
 import com.google.android.gms.location.LocationServices;
 import com.google.android.gms.location.Priority;
+import com.google.android.material.bottomnavigation.BottomNavigationView;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.QueryDocumentSnapshot;
 import java.util.ArrayList;
@@ -45,12 +53,16 @@ public class ViewBooksActivity extends AppCompatActivity {
     private FirebaseFirestore db;
     private double userLat = 0.0, userLon = 0.0;
     private int selectedDistance = 2; // Default 2km
-    private Button selectDistanceButton;
-    private SearchView searchView;
-    private Handler handler = new Handler(Looper.getMainLooper());
-    private Runnable fetchRunnable;
-    private long lastFetchTime = 0;
-    private static final long DEBOUNCE_DELAY = 2000; // 2 seconds
+    private String selectedAction = "All"; // Default action filter
+    private Button applyFiltersButton;
+    private ImageButton backButton;
+    private EditText searchEditText;
+    private Spinner actionSpinner;
+    private Spinner distanceSpinner;
+    private ProgressBar loadingProgressBar;
+    private View loadingOverlay;
+    private TextView errorMessage;
+    private BottomNavigationView bottomNavigation;
 
     private LocationCallback locationCallback = new LocationCallback() {
         @Override
@@ -60,7 +72,7 @@ public class ViewBooksActivity extends AppCompatActivity {
                 userLat = location.getLatitude();
                 userLon = location.getLongitude();
                 Log.d("LocationUpdate", "User Location: " + userLat + ", " + userLon);
-                fetchBooksDebounced();
+                // Do not fetch books here; wait for "Apply Filters" button press
             }
         }
     };
@@ -71,12 +83,31 @@ public class ViewBooksActivity extends AppCompatActivity {
         setContentView(R.layout.activity_view_books);
 
         recyclerView = findViewById(R.id.recyclerViewBooks);
-        selectDistanceButton = findViewById(R.id.btn_apply_distance);
-        searchView = findViewById(R.id.search_books);
+        applyFiltersButton = findViewById(R.id.btn_apply_filters);
+        backButton = findViewById(R.id.backButton);
+        searchEditText = findViewById(R.id.searchEditText);
+        actionSpinner = findViewById(R.id.actionSpinner);
+        distanceSpinner = findViewById(R.id.distanceSpinner);
+        loadingProgressBar = findViewById(R.id.loadingProgressBar);
+        loadingOverlay = findViewById(R.id.loadingOverlay);
+        errorMessage = findViewById(R.id.errorMessage);
+        bottomNavigation = findViewById(R.id.bottomNavigation);
 
         recyclerView.setLayoutManager(new LinearLayoutManager(this));
         adapter = new ViewBookAdapter(this, bookList);
         recyclerView.setAdapter(adapter);
+
+        // Enable smooth scrolling with OvershootInterpolator
+        recyclerView.setLayoutAnimation(
+                android.view.animation.AnimationUtils.loadLayoutAnimation(
+                        this, R.anim.layout_animation_fall_down));
+        recyclerView.setItemAnimator(new androidx.recyclerview.widget.DefaultItemAnimator() {
+            @Override
+            public void onAnimationFinished(@NonNull RecyclerView.ViewHolder viewHolder) {
+                super.onAnimationFinished(viewHolder);
+                recyclerView.smoothScrollBy(0, 0, new OvershootInterpolator());
+            }
+        });
 
         db = FirebaseFirestore.getInstance();
         fusedLocationClient = LocationServices.getFusedLocationProviderClient(this);
@@ -91,23 +122,90 @@ public class ViewBooksActivity extends AppCompatActivity {
             return;
         }
 
-        checkGPSEnabled();
-
-        selectDistanceButton.setOnClickListener(v -> showDistanceDialog());
-
-        searchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
+        // Setup Action Spinner
+        ArrayAdapter<CharSequence> actionAdapter = ArrayAdapter.createFromResource(
+                this, R.array.action_options, android.R.layout.simple_spinner_item);
+        actionAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        actionSpinner.setAdapter(actionAdapter);
+        actionSpinner.setSelection(0); // Default to "All"
+        actionSpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
             @Override
-            public boolean onQueryTextSubmit(String query) {
-                filterBooks(query);
-                return false;
+            public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+                selectedAction = parent.getItemAtPosition(position).toString();
+                // Do not fetch books here; wait for "Apply Filters" button press
             }
 
             @Override
-            public boolean onQueryTextChange(String newText) {
-                filterBooks(newText);
-                return false;
+            public void onNothingSelected(AdapterView<?> parent) {}
+        });
+
+        // Setup Distance Spinner
+        ArrayAdapter<CharSequence> distanceAdapter = ArrayAdapter.createFromResource(
+                this, R.array.distance_options, android.R.layout.simple_spinner_item);
+        distanceAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        distanceSpinner.setAdapter(distanceAdapter);
+        distanceSpinner.setSelection(0); // Default to "2km"
+        distanceSpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+            @Override
+            public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+                String distanceStr = parent.getItemAtPosition(position).toString().replace("km", "");
+                selectedDistance = Integer.parseInt(distanceStr);
+                // Do not fetch books here; wait for "Apply Filters" button press
+            }
+
+            @Override
+            public void onNothingSelected(AdapterView<?> parent) {}
+        });
+
+        // Back button to HomeActivity
+        backButton.setOnClickListener(v -> {
+            Intent intent = new Intent(ViewBooksActivity.this, HomeActivity.class);
+            startActivity(intent);
+            finish();
+        });
+
+        // Search functionality
+        searchEditText.addTextChangedListener(new TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
+
+            @Override
+            public void onTextChanged(CharSequence s, int start, int before, int count) {}
+
+            @Override
+            public void afterTextChanged(Editable s) {
+                filterBooks(s.toString());
             }
         });
+
+        // Apply Filters button to fetch books
+        applyFiltersButton.setOnClickListener(v -> fetchBooks());
+
+        // Bottom Navigation
+        bottomNavigation.setSelectedItemId(R.id.nav_browse);
+        bottomNavigation.setOnNavigationItemSelectedListener(item -> {
+            int itemId = item.getItemId();
+            if (itemId == R.id.nav_home) {
+                startActivity(new Intent(this, HomeActivity.class));
+                finish();
+                return true;
+            } else if (itemId == R.id.nav_browse) {
+                return true;
+            } else if (itemId == R.id.nav_add) {
+                startActivity(new Intent(this, AddNewBookActivity.class));
+                finish();
+                return true;
+            } else if (itemId == R.id.nav_chat) {
+                Toast.makeText(this, "Chat functionality not implemented yet", Toast.LENGTH_SHORT).show();
+                return true;
+            } else if (itemId == R.id.nav_profile) {
+                Toast.makeText(this, "Profile functionality not implemented yet", Toast.LENGTH_SHORT).show();
+                return true;
+            }
+            return false;
+        });
+
+        checkGPSEnabled();
     }
 
     private void checkGPSEnabled() {
@@ -134,54 +232,29 @@ public class ViewBooksActivity extends AppCompatActivity {
         }
     }
 
-    private void showDistanceDialog() {
-        AlertDialog.Builder builder = new AlertDialog.Builder(this);
-        View view = getLayoutInflater().inflate(R.layout.dialog_select_distance, null);
-        builder.setView(view);
-
-        RadioButton btn2km = view.findViewById(R.id.radio2km);
-        RadioButton btn5km = view.findViewById(R.id.radio5km);
-        RadioButton btn10km = view.findViewById(R.id.radio10km);
-        Button applyButton = view.findViewById(R.id.apply_distance);
-
-        AlertDialog dialog = builder.create();
-        dialog.show();
-
-        applyButton.setOnClickListener(v -> {
-            if (btn2km.isChecked()) selectedDistance = 2;
-            else if (btn5km.isChecked()) selectedDistance = 5;
-            else if (btn10km.isChecked()) selectedDistance = 10;
-            fetchBooksDebounced();
-            dialog.dismiss();
-        });
-    }
-
-    private void fetchBooksDebounced() {
-        if (!searchView.isIconified() && !searchView.getQuery().toString().isEmpty()) {
-            return; // Skip fetch during active search
-        }
-        long currentTime = System.currentTimeMillis();
-        if (currentTime - lastFetchTime >= DEBOUNCE_DELAY) {
-            fetchBooksFromFirestore();
-            lastFetchTime = currentTime;
-        } else {
-            if (fetchRunnable != null) handler.removeCallbacks(fetchRunnable);
-            fetchRunnable = () -> {
-                fetchBooksFromFirestore();
-                lastFetchTime = System.currentTimeMillis();
-            };
-            handler.postDelayed(fetchRunnable, DEBOUNCE_DELAY);
-        }
-    }
-
-    private void fetchBooksFromFirestore() {
+    private void fetchBooks() {
+        // Show loading overlay with spinner
+        loadingOverlay.setVisibility(View.VISIBLE);
+        loadingProgressBar.setVisibility(View.VISIBLE);
+        errorMessage.setVisibility(View.GONE);
         bookList.clear();
+
         Set<String> bookIds = new HashSet<>();
         String currentUserPhone = getSharedPreferences("BookSwapPrefs", MODE_PRIVATE).getString("phoneNumber", null);
         Log.d("FirestoreDebug", "Current User Phone: " + currentUserPhone);
         if (currentUserPhone == null) {
             Log.e("AuthError", "No user phone number found!");
             Toast.makeText(this, "Please log in first!", Toast.LENGTH_LONG).show();
+            loadingOverlay.setVisibility(View.GONE);
+            loadingProgressBar.setVisibility(View.GONE);
+            return;
+        }
+
+        if (userLat == 0.0 || userLon == 0.0) {
+            Log.e("LocationError", "User location not available!");
+            Toast.makeText(this, "Unable to get your location. Please try again.", Toast.LENGTH_LONG).show();
+            loadingOverlay.setVisibility(View.GONE);
+            loadingProgressBar.setVisibility(View.GONE);
             return;
         }
 
@@ -219,25 +292,37 @@ public class ViewBooksActivity extends AppCompatActivity {
                         if (!bookIds.contains(bookDoc.getId()) && book.getLatitude() != 0 && book.getLongitude() != 0) {
                             bookIds.add(bookDoc.getId());
                             double distance = calculateDistance(userLat, userLon, book.getLatitude(), book.getLongitude());
-                            if (distance <= selectedDistance * 1000) { // Test with 1000km: distance <= 1000000
-                                book.setDistance(distance);
-                                book.setFormattedDistance(formatDistance(distance));
-                                tempList.add(book);
+                            if (distance <= selectedDistance * 1000) {
+                                // Apply action filter
+                                if (selectedAction.equals("All") ||
+                                        (selectedAction.equals("Swap") && book.getAction() != null && book.getAction().equalsIgnoreCase("Swap")) ||
+                                        (selectedAction.equals("Lend") && book.getAction() != null && book.getAction().equalsIgnoreCase("Lend")) ||
+                                        (selectedAction.equals("Buy") && book.getAction() != null && book.getAction().equalsIgnoreCase("Buy"))) {
+                                    book.setDistance(distance);
+                                    tempList.add(book);
+                                }
                             }
                         }
                     }
                     bookList.clear();
                     if (!tempList.isEmpty()) {
                         bookList.addAll(tempList);
-                        bookListFull = new ArrayList<>(tempList); // For search
+                        bookListFull = new ArrayList<>(tempList);
                         adapter.updateList(bookList);
                     } else {
+                        errorMessage.setVisibility(View.VISIBLE);
                         Toast.makeText(this, "No books from other users found within " + selectedDistance + "km!", Toast.LENGTH_SHORT).show();
                     }
+                    // Hide loading overlay and spinner
+                    loadingOverlay.setVisibility(View.GONE);
+                    loadingProgressBar.setVisibility(View.GONE);
                 })
                 .addOnFailureListener(e -> {
                     Log.e("FirestoreError", "Error fetching books: " + e.getMessage());
                     Toast.makeText(this, "Failed to fetch books", Toast.LENGTH_SHORT).show();
+                    loadingOverlay.setVisibility(View.GONE);
+                    loadingProgressBar.setVisibility(View.GONE);
+                    errorMessage.setVisibility(View.VISIBLE);
                 });
     }
 
@@ -252,16 +337,8 @@ public class ViewBooksActivity extends AppCompatActivity {
         return R * c * 1000; // Distance in meters
     }
 
-    private String formatDistance(double distanceInMeters) {
-        if (distanceInMeters < 1000) {
-            return String.format("%.0f meter%s", distanceInMeters, distanceInMeters == 1 ? "" : "s");
-        } else {
-            return String.format("%.2f km", distanceInMeters / 1000);
-        }
-    }
-
     private void filterBooks(String query) {
-        adapter.getFilter().filter(query); // Use adapter's filter
+        adapter.getFilter().filter(query);
     }
 
     @Override

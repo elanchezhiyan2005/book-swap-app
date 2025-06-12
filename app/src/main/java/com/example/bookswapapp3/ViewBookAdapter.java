@@ -5,6 +5,7 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Button;
 import android.widget.Filter;
 import android.widget.Filterable;
 import android.widget.ImageView;
@@ -38,12 +39,29 @@ public class ViewBookAdapter extends RecyclerView.Adapter<ViewBookAdapter.ViewHo
         BookModel book = bookList.get(position);
         holder.title.setText(book.getTitle());
         holder.author.setText(book.getAuthor());
-        holder.edition.setText(book.getEdition());
-        Log.d("BookDistance", "Book: " + book.getTitle() + ", Distance: " + book.getFormattedDistance());
         holder.place.setText(book.getPlace() != null ? book.getPlace() : "Unknown Place");
 
         // Load book image using Glide
         Glide.with(context).load(book.getImageUrl()).into(holder.bookImage);
+
+        // Set action button text and color
+        String action = book.getAction() != null ? book.getAction() : "N/A";
+        holder.actionButton.setText(action);
+        if (action.equalsIgnoreCase("Swap")) {
+            holder.actionButton.setBackgroundResource(R.drawable.action_button_swap); // Green
+        } else if (action.equalsIgnoreCase("Lend")) {
+            holder.actionButton.setBackgroundResource(R.drawable.action_button_lend); // Blue
+        } else if (action.equalsIgnoreCase("Buy")) {
+            holder.actionButton.setBackgroundResource(R.drawable.action_button_buy); // Orange
+        } else {
+            holder.actionButton.setBackgroundResource(R.drawable.action_button_default); // Default
+        }
+
+        // Handle action button click
+        holder.actionButton.setOnClickListener(v -> {
+            Log.d("ActionClick", "Action clicked for book: " + book.getTitle() + ", Action: " + book.getAction());
+            // Add action logic here
+        });
     }
 
     @Override
@@ -52,17 +70,17 @@ public class ViewBookAdapter extends RecyclerView.Adapter<ViewBookAdapter.ViewHo
     }
 
     public static class ViewHolder extends RecyclerView.ViewHolder {
-        TextView title, author, edition,place; // Added distance
+        TextView title, author, place;
         ImageView bookImage;
+        Button actionButton;
 
         public ViewHolder(@NonNull View itemView) {
             super(itemView);
             title = itemView.findViewById(R.id.bookTitleTextView);
             author = itemView.findViewById(R.id.bookAuthorTextView);
-            edition = itemView.findViewById(R.id.bookEditionTextView);
-
             place = itemView.findViewById(R.id.bookPlaceTextView);
             bookImage = itemView.findViewById(R.id.bookImageView);
+            actionButton = itemView.findViewById(R.id.actionButton);
         }
     }
 

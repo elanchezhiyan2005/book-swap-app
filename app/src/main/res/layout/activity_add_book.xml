@@ -1,75 +1,96 @@
+<?xml version="1.0" encoding="utf-8"?>
 <LinearLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
-    android:background="@color/white">
+    android:background="@color/background">
 
-    <!-- Toolbar -->
+    <!-- Header -->
     <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="56dp"
+        android:layout_height="wrap_content"
         android:orientation="horizontal"
-        android:background="@color/orange"
-        android:gravity="center_vertical">
+        android:background="@color/background"
+        android:padding="16dp"
+        android:paddingBottom="8dp">
 
-        <!-- Back Button -->
-        <Button
+        <!-- Back Arrow -->
+        <ImageButton
             android:id="@+id/backButton"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
             android:background="@android:color/transparent"
-            android:text="\u2190"
-            android:textSize="18sp"
-            android:textColor="@color/white"
-            android:textStyle="bold" />
+            android:src="@drawable/ic_arrow_left"
+            android:contentDescription="Back"
+            android:padding="12dp"
+            android:scaleType="fitCenter" />
 
-        <!-- Page Title -->
+        <!-- Title -->
         <TextView
-            android:id="@+id/pageTitle"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
             android:gravity="center"
-            android:text="Add Book"
-            android:textColor="@color/white"
-            android:textSize="20sp"
-            android:textStyle="bold" />
-
-        <!-- Add New Book (+) Button -->
-        <Button
-            android:id="@+id/addBookButton"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:background="@android:color/transparent"
-            android:text="+"
+            android:text="Add a Book"
             android:textSize="18sp"
-            android:textColor="@color/white"
-            android:textStyle="bold" />
+            android:textStyle="bold"
+            style="@style/TextPrimary" />
+
+        <!-- Question Icon -->
+        <ImageButton
+            android:id="@+id/helpButton"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
+            android:background="@android:color/transparent"
+            android:src="@drawable/ic_question"
+            android:contentDescription="Help"
+            android:padding="12dp"
+            android:scaleType="fitCenter" />
     </LinearLayout>
 
     <!-- Content Section -->
-    <RelativeLayout
+    <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="match_parent">
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:gravity="center"
+        android:paddingHorizontal="16dp"
+        android:paddingVertical="12dp">
 
-        <!-- RecyclerView for Book List -->
-        <androidx.recyclerview.widget.RecyclerView
-            android:id="@+id/bookRecyclerView"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:visibility="visible" />
+        <Button
+            android:id="@+id/addNewBookButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Add New Book"
+            style="@style/ButtonAddNewBook" />
+    </LinearLayout>
 
-        <!-- Empty State Message -->
-        <TextView
-            android:id="@+id/emptyStateMessage"
+    <!-- Bottom Navigation -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical">
+
+        <com.google.android.material.bottomnavigation.BottomNavigationView
+            android:id="@+id/bottomNavigationView"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_centerInParent="true"
-            android:gravity="center"
-            android:text="No books added yet. Tap the + icon to add your first book!"
-            android:textColor="@color/black"
-            android:textSize="16sp"
-            android:visibility="gone" />
-    </RelativeLayout>
+            android:background="@color/background"
+            app:menu="@menu/bottom_nav_menu"
+            app:itemIconTint="@drawable/nav_item_color_selector"
+            app:itemTextColor="@drawable/nav_item_color_selector"
+            app:itemBackground="@android:color/transparent"
+            app:labelVisibilityMode="labeled"
+            android:paddingHorizontal="16dp"
+            android:paddingTop="8dp"
+            android:paddingBottom="12dp" />
+
+        <!-- Safe Area -->
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="20dp"
+            android:background="@color/background" />
+    </LinearLayout>
 </LinearLayout>

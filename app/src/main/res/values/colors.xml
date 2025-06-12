@@ -2,5 +2,16 @@
     <color name="white">#FFFFFF</color>
     <color name="black">#000000</color>
     <color name="orange">#FF5722</color>
-    <color name="splash_background">#6200EE</color> <!-- Purple theme color -->
+    <color name="splash_background">#6200EE</color>
+    <color name="background_light">#f8fafc</color>
+    <color name="text_dark">#0d141c</color>
+    <color name="hint_muted">#49739c</color>
+    <color name="input_background">#e7edf4</color>
+    <color name="button_blue">#3d98f4</color>
+    <color name="background">#f8f9fc</color>
+    <color name="text_primary">#0d0f1c</color>
+    <color name="text_secondary">#47579e</color>
+    <color name="border">#e6e9f4</color>
+    <color name="button_add_new_book">#4264ff</color>
+    <color name="button_light">#e6e9f4</color>
 </resources>

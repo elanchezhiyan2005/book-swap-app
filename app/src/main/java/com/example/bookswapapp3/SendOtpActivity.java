@@ -5,6 +5,7 @@ import android.os.Bundle;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.ImageButton;
 import android.widget.ProgressBar;
 import android.widget.Toast;
 import androidx.appcompat.app.AppCompatActivity;
@@ -19,6 +20,7 @@ import java.util.concurrent.TimeUnit;
 public class SendOtpActivity extends AppCompatActivity {
     private EditText phoneInput;
     private Button sendOtpButton;
+    private ImageButton helpButton;
     private ProgressBar progressBar;
     private FirebaseAuth mAuth;
 
@@ -30,9 +32,11 @@ public class SendOtpActivity extends AppCompatActivity {
         mAuth = FirebaseAuth.getInstance();
         phoneInput = findViewById(R.id.phoneInput);
         sendOtpButton = findViewById(R.id.sendOtpButton);
+        helpButton = findViewById(R.id.helpButton);
         progressBar = findViewById(R.id.progressBar);
         progressBar.setVisibility(View.GONE);
 
+        // Send OTP button listener
         sendOtpButton.setOnClickListener(v -> {
             String localPhoneNumber = phoneInput.getText().toString().trim();
             if (localPhoneNumber.isEmpty() || localPhoneNumber.length() < 10) {
@@ -41,6 +45,11 @@ public class SendOtpActivity extends AppCompatActivity {
                 String fullPhoneNumber = "+91" + localPhoneNumber;
                 sendOtp(fullPhoneNumber);
             }
+        });
+
+        // Help button listener
+        helpButton.setOnClickListener(v -> {
+            Toast.makeText(this, "Need help? Contact support at support@bibliobant.com", Toast.LENGTH_LONG).show();
         });
     }
 

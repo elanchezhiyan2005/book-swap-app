@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:tools="http://schemas.android.com/tools"
+    xmlns:android="http://schemas.android.com/apk/res/android">
+    <item
+        android:id="@+id/nav_home"
+        android:icon="@drawable/ic_house"
+        android:title="Home" />
+    <item
+        android:id="@+id/nav_browse"
+        android:icon="@drawable/ic_magnifying_glass"
+        android:title="Browse" />
+    <item
+        android:id="@+id/nav_add"
+        android:icon="@drawable/ic_plus"
+        android:title="Add" />
+    <item
+        android:id="@+id/nav_chat"
+        android:icon="@drawable/ic_chat_circle_dots"
+        android:title="Chat" />
+    <item
+        android:id="@+id/nav_profile"
+        android:icon="@drawable/ic_user"
+        android:title="Profile" />
+</menu>
