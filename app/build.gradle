@@ -10,6 +10,7 @@ if (localPropertiesFile.exists()) {
 }
 
 def BOOKS_API_KEY = localProperties['BOOKS_API_KEY']
+def RECAPTCHA_SITE_KEY = project.hasProperty("RECAPTCHA_SITE_KEY") ? project.RECAPTCHA_SITE_KEY : ""
 
 android {
     namespace 'com.example.bookswapapp3'
@@ -17,6 +18,7 @@ android {
 
     defaultConfig {
         buildConfigField "String", "BOOKS_API_KEY", "\"${BOOKS_API_KEY}\""
+        buildConfigField "String", "RECAPTCHA_SITE_KEY", "\"${RECAPTCHA_SITE_KEY}\""
         applicationId "com.example.bookswapapp3"
         minSdk 24
         targetSdk 34

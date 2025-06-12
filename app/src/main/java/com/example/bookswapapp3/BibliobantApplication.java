@@ -15,7 +15,7 @@ public class BibliobantApplication extends Application {
     private static final boolean IS_DEBUG_MODE = true; // Set to false for production
 
     // Replace this with your actual reCAPTCHA Enterprise site key
-    private static final String RECAPTCHA_SITE_KEY = "6Lf0jjwrAAAAAP7xInI1CYRe3O00lsIuK0IShJoS";
+    private static final String RECAPTCHA_SITE_KEY = BuildConfig.RECAPTCHA_SITE_KEY;
 
     @Override
     public void onCreate() {
