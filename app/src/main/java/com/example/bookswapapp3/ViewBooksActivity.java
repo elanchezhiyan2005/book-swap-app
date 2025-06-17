@@ -7,7 +7,6 @@ import android.content.pm.PackageManager;
 import android.location.Location;
 import android.location.LocationManager;
 import android.os.Bundle;
-import android.os.Handler;
 import android.os.Looper;
 import android.text.Editable;
 import android.text.TextWatcher;
@@ -19,6 +18,7 @@ import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageButton;
+import android.widget.LinearLayout;
 import android.widget.ProgressBar;
 import android.widget.Spinner;
 import android.widget.TextView;
@@ -35,7 +35,9 @@ import com.google.android.gms.location.LocationResult;
 import com.google.android.gms.location.LocationServices;
 import com.google.android.gms.location.Priority;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
+import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;
+import com.google.firebase.firestore.Query;
 import com.google.firebase.firestore.QueryDocumentSnapshot;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -49,11 +51,13 @@ public class ViewBooksActivity extends AppCompatActivity {
     private ViewBookAdapter adapter;
     private List<BookModel> bookList = new ArrayList<>();
     private List<BookModel> bookListFull = new ArrayList<>(); // For search
+    private List<BookModel> allBooks = new ArrayList<>(); // All books before pagination
     private FusedLocationProviderClient fusedLocationClient;
     private FirebaseFirestore db;
     private double userLat = 0.0, userLon = 0.0;
     private int selectedDistance = 2; // Default 2km
     private String selectedAction = "All"; // Default action filter
+    private String currentQuery = ""; // Current search query
     private Button applyFiltersButton;
     private ImageButton backButton;
     private EditText searchEditText;
@@ -63,6 +67,12 @@ public class ViewBooksActivity extends AppCompatActivity {
     private View loadingOverlay;
     private TextView errorMessage;
     private BottomNavigationView bottomNavigation;
+    private LinearLayout paginationContainer;
+
+    private static final int BOOKS_PER_PAGE = 10;
+    private int currentPage = 1;
+    private int totalPages = 1;
+    private DocumentSnapshot lastVisibleDocument = null;
 
     private LocationCallback locationCallback = new LocationCallback() {
         @Override
@@ -72,7 +82,6 @@ public class ViewBooksActivity extends AppCompatActivity {
                 userLat = location.getLatitude();
                 userLon = location.getLongitude();
                 Log.d("LocationUpdate", "User Location: " + userLat + ", " + userLon);
-                // Do not fetch books here; wait for "Apply Filters" button press
             }
         }
     };
@@ -92,12 +101,13 @@ public class ViewBooksActivity extends AppCompatActivity {
         loadingOverlay = findViewById(R.id.loadingOverlay);
         errorMessage = findViewById(R.id.errorMessage);
         bottomNavigation = findViewById(R.id.bottomNavigation);
+        paginationContainer = findViewById(R.id.paginationContainer);
 
         recyclerView.setLayoutManager(new LinearLayoutManager(this));
         adapter = new ViewBookAdapter(this, bookList);
         recyclerView.setAdapter(adapter);
 
-        // Enable smooth scrolling with OvershootInterpolator
+        // Enable smooth scrolling animation
         recyclerView.setLayoutAnimation(
                 android.view.animation.AnimationUtils.loadLayoutAnimation(
                         this, R.anim.layout_animation_fall_down));
@@ -132,7 +142,6 @@ public class ViewBooksActivity extends AppCompatActivity {
             @Override
             public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
                 selectedAction = parent.getItemAtPosition(position).toString();
-                // Do not fetch books here; wait for "Apply Filters" button press
             }
 
             @Override
@@ -150,7 +159,6 @@ public class ViewBooksActivity extends AppCompatActivity {
             public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
                 String distanceStr = parent.getItemAtPosition(position).toString().replace("km", "");
                 selectedDistance = Integer.parseInt(distanceStr);
-                // Do not fetch books here; wait for "Apply Filters" button press
             }
 
             @Override
@@ -174,12 +182,17 @@ public class ViewBooksActivity extends AppCompatActivity {
 
             @Override
             public void afterTextChanged(Editable s) {
-                filterBooks(s.toString());
+                currentQuery = s.toString().trim();
+                currentPage = 1; // Reset to page 1 on new search query
+                fetchBooks(); // Fetch books with the new query
             }
         });
 
         // Apply Filters button to fetch books
-        applyFiltersButton.setOnClickListener(v -> fetchBooks());
+        applyFiltersButton.setOnClickListener(v -> {
+            currentPage = 1; // Reset to page 1 when applying filters
+            fetchBooks();
+        });
 
         // Bottom Navigation
         bottomNavigation.setSelectedItemId(R.id.nav_browse);
@@ -233,11 +246,11 @@ public class ViewBooksActivity extends AppCompatActivity {
     }
 
     private void fetchBooks() {
-        // Show loading overlay with spinner
         loadingOverlay.setVisibility(View.VISIBLE);
         loadingProgressBar.setVisibility(View.VISIBLE);
         errorMessage.setVisibility(View.GONE);
         bookList.clear();
+        allBooks.clear();
 
         Set<String> bookIds = new HashSet<>();
         String currentUserPhone = getSharedPreferences("BookSwapPrefs", MODE_PRIVATE).getString("phoneNumber", null);
@@ -270,60 +283,126 @@ public class ViewBooksActivity extends AppCompatActivity {
         String endHash = geohashList.get(geohashList.size() - 1);
         Log.d("FirestoreDebug", "Geohash Range: " + startHash + " to " + endHash);
 
-        db.collectionGroup("books")
+        Query query = db.collectionGroup("books")
                 .whereGreaterThanOrEqualTo("geohash", startHash)
-                .whereLessThanOrEqualTo("geohash", endHash)
-                .get()
-                .addOnSuccessListener(querySnapshot -> {
-                    List<BookModel> tempList = new ArrayList<>();
-                    Log.d("FirestoreDebug", "Fetched " + querySnapshot.size() + " books");
-                    for (QueryDocumentSnapshot bookDoc : querySnapshot) {
-                        BookModel book = bookDoc.toObject(BookModel.class);
-                        String bookUserPhone = book.getUserPhoneNumber();
-                        Log.d("FirestoreDebug", "Book: " + book.getTitle() + ", UserPhone: " + bookUserPhone);
-                        if (bookUserPhone != null && bookUserPhone.equals(currentUserPhone)) {
-                            Log.d("FirestoreDebug", "Skipping own book: " + book.getTitle());
-                            continue;
-                        }
-                        if (book.getTitle() == null || book.getAuthor() == null) {
-                            Log.e("FirestoreError", "Book missing fields: " + bookDoc.getId());
-                            continue;
-                        }
-                        if (!bookIds.contains(bookDoc.getId()) && book.getLatitude() != 0 && book.getLongitude() != 0) {
-                            bookIds.add(bookDoc.getId());
-                            double distance = calculateDistance(userLat, userLon, book.getLatitude(), book.getLongitude());
-                            if (distance <= selectedDistance * 1000) {
-                                // Apply action filter
-                                if (selectedAction.equals("All") ||
-                                        (selectedAction.equals("Swap") && book.getAction() != null && book.getAction().equalsIgnoreCase("Swap")) ||
-                                        (selectedAction.equals("Lend") && book.getAction() != null && book.getAction().equalsIgnoreCase("Lend")) ||
-                                        (selectedAction.equals("Buy") && book.getAction() != null && book.getAction().equalsIgnoreCase("Buy"))) {
-                                    book.setDistance(distance);
-                                    tempList.add(book);
-                                }
-                            }
+                .whereLessThanOrEqualTo("geohash", endHash);
+
+        query.get().addOnSuccessListener(querySnapshot -> {
+            List<BookModel> tempList = new ArrayList<>();
+            Log.d("FirestoreDebug", "Fetched " + querySnapshot.size() + " books");
+            for (QueryDocumentSnapshot bookDoc : querySnapshot) {
+                BookModel book = bookDoc.toObject(BookModel.class);
+                String bookUserPhone = book.getUserPhoneNumber();
+                Log.d("FirestoreDebug", "Book: " + book.getTitle() + ", Author: " + book.getAuthor() + ", UserPhone: " + bookUserPhone);
+                if (bookUserPhone != null && bookUserPhone.equals(currentUserPhone)) {
+                    Log.d("FirestoreDebug", "Skipping own book: " + book.getTitle());
+                    continue;
+                }
+                if (book.getTitle() == null || book.getAuthor() == null) {
+                    Log.e("FirestoreError", "Book missing fields: " + bookDoc.getId());
+                    continue;
+                }
+                if (!bookIds.contains(bookDoc.getId()) && book.getLatitude() != 0 && book.getLongitude() != 0) {
+                    bookIds.add(bookDoc.getId());
+                    double distance = calculateDistance(userLat, userLon, book.getLatitude(), book.getLongitude());
+                    if (distance <= selectedDistance * 1000) {
+                        if (selectedAction.equals("All") ||
+                                (selectedAction.equals("Swap") && book.getAction() != null && book.getAction().equalsIgnoreCase("Swap")) ||
+                                (selectedAction.equals("Lend") && book.getAction() != null && book.getAction().equalsIgnoreCase("Lend")) ||
+                                (selectedAction.equals("Buy") && book.getAction() != null && book.getAction().equalsIgnoreCase("Buy"))) {
+                            book.setDistance(distance);
+                            tempList.add(book);
                         }
                     }
-                    bookList.clear();
-                    if (!tempList.isEmpty()) {
-                        bookList.addAll(tempList);
-                        bookListFull = new ArrayList<>(tempList);
-                        adapter.updateList(bookList);
-                    } else {
-                        errorMessage.setVisibility(View.VISIBLE);
-                        Toast.makeText(this, "No books from other users found within " + selectedDistance + "km!", Toast.LENGTH_SHORT).show();
+                }
+            }
+
+            // Apply search filter to tempList
+            if (!currentQuery.isEmpty()) {
+                List<BookModel> filteredList = new ArrayList<>();
+                String queryLower = currentQuery.toLowerCase();
+                for (BookModel book : tempList) {
+                    if (book.getTitle().toLowerCase().contains(queryLower) ||
+                            book.getAuthor().toLowerCase().contains(queryLower)) {
+                        filteredList.add(book);
                     }
-                    // Hide loading overlay and spinner
-                    loadingOverlay.setVisibility(View.GONE);
-                    loadingProgressBar.setVisibility(View.GONE);
-                })
-                .addOnFailureListener(e -> {
-                    Log.e("FirestoreError", "Error fetching books: " + e.getMessage());
-                    Toast.makeText(this, "Failed to fetch books", Toast.LENGTH_SHORT).show();
-                    loadingOverlay.setVisibility(View.GONE);
-                    loadingProgressBar.setVisibility(View.GONE);
-                    errorMessage.setVisibility(View.VISIBLE);
-                });
+                }
+                tempList = filteredList;
+            }
+
+            allBooks.addAll(tempList);
+            bookListFull = new ArrayList<>(tempList);
+
+            // Calculate total pages
+            totalPages = (int) Math.ceil((double) allBooks.size() / BOOKS_PER_PAGE);
+            if (totalPages == 0) totalPages = 1; // Ensure at least 1 page
+
+            // Load the current page
+            loadPage(currentPage);
+
+            // Update pagination bar
+            updatePaginationBar();
+
+            if (allBooks.isEmpty()) {
+                errorMessage.setVisibility(View.VISIBLE);
+                Toast.makeText(this, "No books from other users found within " + selectedDistance + "km!", Toast.LENGTH_SHORT).show();
+            }
+
+            loadingOverlay.setVisibility(View.GONE);
+            loadingProgressBar.setVisibility(View.GONE);
+            Log.d("UIDebug", "Loading overlay hidden");
+        }).addOnFailureListener(e -> {
+            Log.e("FirestoreError", "Error fetching books: " + e.getMessage());
+            Toast.makeText(this, "Failed to fetch books", Toast.LENGTH_SHORT).show();
+            loadingOverlay.setVisibility(View.GONE);
+            loadingProgressBar.setVisibility(View.GONE);
+            errorMessage.setVisibility(View.VISIBLE);
+            Log.d("UIDebug", "Loading overlay hidden");
+        });
+    }
+
+    private void loadPage(int page) {
+        bookList.clear();
+        int startIndex = (page - 1) * BOOKS_PER_PAGE;
+        int endIndex = Math.min(startIndex + BOOKS_PER_PAGE, allBooks.size());
+
+        if (startIndex >= allBooks.size()) {
+            Log.d("PaginationDebug", "No books to display on page " + page + ". Start index: " + startIndex + ", Total books: " + allBooks.size());
+            adapter.notifyDataSetChanged();
+            return;
+        }
+
+        bookList.addAll(allBooks.subList(startIndex, endIndex));
+        Log.d("PaginationDebug", "Loaded page " + page + ": " + bookList.size() + " books");
+        Log.d("PaginationDebug", "bookList size before notify: " + bookList.size());
+        adapter.notifyDataSetChanged();
+        recyclerView.scrollToPosition(0); // Scroll to top of the page
+    }
+
+    private void updatePaginationBar() {
+        paginationContainer.removeAllViews();
+        for (int i = 1; i <= totalPages; i++) {
+            TextView pageButton = new TextView(this);
+            pageButton.setText(String.valueOf(i));
+            pageButton.setPadding(16, 8, 16, 8);
+            pageButton.setTextSize(16);
+            if (i == currentPage) {
+                pageButton.setTextColor(getResources().getColor(android.R.color.white));
+                pageButton.setBackgroundResource(R.drawable.button_background);
+            } else {
+                pageButton.setTextColor(getResources().getColor(android.R.color.black));
+                pageButton.setBackgroundResource(android.R.drawable.btn_default);
+            }
+
+            final int pageNum = i;
+            pageButton.setOnClickListener(v -> {
+                currentPage = pageNum;
+                loadPage(currentPage);
+                updatePaginationBar();
+            });
+
+            paginationContainer.addView(pageButton);
+        }
     }
 
     private double calculateDistance(double lat1, double lon1, double lat2, double lon2) {
@@ -335,10 +414,6 @@ public class ViewBooksActivity extends AppCompatActivity {
                 * Math.sin(lonDistance / 2) * Math.sin(lonDistance / 2);
         double c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
         return R * c * 1000; // Distance in meters
-    }
-
-    private void filterBooks(String query) {
-        adapter.getFilter().filter(query);
     }
 
     @Override

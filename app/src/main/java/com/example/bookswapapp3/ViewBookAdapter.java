@@ -6,25 +6,20 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
-import android.widget.Filter;
-import android.widget.Filterable;
 import android.widget.ImageView;
 import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 import com.bumptech.glide.Glide;
-import java.util.ArrayList;
 import java.util.List;
 
-public class ViewBookAdapter extends RecyclerView.Adapter<ViewBookAdapter.ViewHolder> implements Filterable {
+public class ViewBookAdapter extends RecyclerView.Adapter<ViewBookAdapter.ViewHolder> {
     private Context context;
     private List<BookModel> bookList;
-    private List<BookModel> bookListFull;
 
     public ViewBookAdapter(Context context, List<BookModel> bookList) {
         this.context = context;
-        this.bookList = new ArrayList<>(bookList);
-        this.bookListFull = new ArrayList<>(bookList);
+        this.bookList = bookList; // Use the same reference, don't copy
     }
 
     @NonNull
@@ -37,6 +32,7 @@ public class ViewBookAdapter extends RecyclerView.Adapter<ViewBookAdapter.ViewHo
     @Override
     public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
         BookModel book = bookList.get(position);
+        Log.d("AdapterDebug", "Binding book at position " + position + ": " + book.getTitle());
         holder.title.setText(book.getTitle());
         holder.author.setText(book.getAuthor());
         holder.place.setText(book.getPlace() != null ? book.getPlace() : "Unknown Place");
@@ -60,12 +56,12 @@ public class ViewBookAdapter extends RecyclerView.Adapter<ViewBookAdapter.ViewHo
         // Handle action button click
         holder.actionButton.setOnClickListener(v -> {
             Log.d("ActionClick", "Action clicked for book: " + book.getTitle() + ", Action: " + book.getAction());
-            // Add action logic here
         });
     }
 
     @Override
     public int getItemCount() {
+        Log.d("AdapterDebug", "getItemCount: " + bookList.size());
         return bookList.size();
     }
 
@@ -82,46 +78,5 @@ public class ViewBookAdapter extends RecyclerView.Adapter<ViewBookAdapter.ViewHo
             bookImage = itemView.findViewById(R.id.bookImageView);
             actionButton = itemView.findViewById(R.id.actionButton);
         }
-    }
-
-    @Override
-    public Filter getFilter() {
-        return bookFilter;
-    }
-
-    private final Filter bookFilter = new Filter() {
-        @Override
-        protected FilterResults performFiltering(CharSequence constraint) {
-            List<BookModel> filteredList = new ArrayList<>();
-            if (constraint == null || constraint.length() == 0) {
-                filteredList.addAll(bookListFull);
-            } else {
-                String filterPattern = constraint.toString().toLowerCase().trim();
-                for (BookModel book : bookListFull) {
-                    if (book.getTitle().toLowerCase().contains(filterPattern) ||
-                            book.getAuthor().toLowerCase().contains(filterPattern)) {
-                        filteredList.add(book);
-                    }
-                }
-            }
-            FilterResults results = new FilterResults();
-            results.values = filteredList;
-            results.count = filteredList.size();
-            return results;
-        }
-
-        @Override
-        protected void publishResults(CharSequence constraint, FilterResults results) {
-            bookList.clear();
-            bookList.addAll((List) results.values);
-            notifyDataSetChanged();
-        }
-    };
-
-    public void updateList(List<BookModel> newList) {
-        bookList.clear();
-        bookList.addAll(newList);
-        bookListFull = new ArrayList<>(newList);
-        notifyDataSetChanged();
     }
 }

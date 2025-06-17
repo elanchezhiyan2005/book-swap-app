@@ -1,6 +1,7 @@
 package com.example.bookswapapp3;
 
 import java.util.Map;
+import com.google.firebase.Timestamp;
 
 public class BookModel {
     private String isbn;
@@ -18,6 +19,9 @@ public class BookModel {
     private String formattedDistance;
     private String action; // Added for Swap/Borrow/Buy
     private Map<String, Object> location;
+    private String year; // Added for Firestore field
+    private String genre; // Added for Firestore field
+    private Timestamp timestamp; // Added for Firestore field
 
     public BookModel() {}
 
@@ -63,6 +67,11 @@ public class BookModel {
     public void setUserPhoneNumber(String userPhoneNumber) { this.userPhoneNumber = userPhoneNumber; }
     public String getAction() { return action; }
     public void setAction(String action) { this.action = action; }
+    public void setYear(String year) { this.year = year; }
+    public String getGenre() { return genre; }
+    public void setGenre(String genre) { this.genre = genre; }
+    public Timestamp getTimestamp() { return timestamp; }
+    public void setTimestamp(Timestamp timestamp) { this.timestamp = timestamp; }
     public Map<String, Object> getLocation() { return location; }
     public void setLocation(Map<String, Object> location) {
         this.location = location;
