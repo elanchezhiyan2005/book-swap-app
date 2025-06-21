@@ -36,7 +36,8 @@
             android:text="Add a Book"
             android:textSize="18sp"
             android:textStyle="bold"
-            style="@style/TextPrimary" />
+            style="@style/TextPrimary"
+            android:fontFamily="@font/manrope_bold" />
 
         <!-- Question Icon -->
         <ImageButton
@@ -64,7 +65,8 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="Add New Book"
-            style="@style/ButtonAddNewBook" />
+            style="@style/ButtonAddNewBook"
+            android:fontFamily="@font/manrope_regular" />
     </LinearLayout>
 
     <!-- Bottom Navigation -->
@@ -84,13 +86,6 @@
             app:itemBackground="@android:color/transparent"
             app:labelVisibilityMode="labeled"
             android:paddingHorizontal="16dp"
-            android:paddingTop="8dp"
-            android:paddingBottom="12dp" />
-
-        <!-- Safe Area -->
-        <View
-            android:layout_width="match_parent"
-            android:layout_height="20dp"
-            android:background="@color/background" />
+            android:paddingTop="8dp" />
     </LinearLayout>
 </LinearLayout>

@@ -35,7 +35,8 @@
             android:text="Add a New Book"
             android:textSize="18sp"
             android:textStyle="bold"
-            style="@style/TextPrimary" />
+            style="@style/TextPrimary"
+            android:fontFamily="@font/manrope_bold" />
     </LinearLayout>
 
     <!-- Scrollable Content -->
@@ -56,7 +57,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="vertical"
-                android:layout_marginBottom="16dp">
+                android:layout_marginBottom="12dp">
 
                 <RadioButton
                     android:id="@+id/radioYes"
@@ -65,11 +66,12 @@
                     android:background="@drawable/radio_background"
                     android:button="@android:color/transparent"
                     android:checked="true"
-                    android:padding="15dp"
-                    android:layout_marginBottom="12dp"
+                    android:padding="12dp"
+                    android:layout_marginBottom="8dp"
                     android:text="Yes, I have an ISBN"
                     android:textSize="14sp"
-                    style="@style/TextPrimary" />
+                    style="@style/TextPrimary"
+                    android:fontFamily="@font/noto_sans_regular" />
 
                 <RadioButton
                     android:id="@+id/radioNo"
@@ -77,10 +79,11 @@
                     android:layout_height="wrap_content"
                     android:background="@drawable/radio_background"
                     android:button="@android:color/transparent"
-                    android:padding="15dp"
+                    android:padding="12dp"
                     android:text="No, I'll enter details manually"
                     android:textSize="14sp"
-                    style="@style/TextPrimary" />
+                    style="@style/TextPrimary"
+                    android:fontFamily="@font/noto_sans_regular" />
             </RadioGroup>
 
             <!-- ISBN Input Section -->
@@ -89,7 +92,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="vertical"
-                android:layout_marginBottom="16dp"
+                android:layout_marginBottom="12dp"
                 android:visibility="visible">
 
                 <TextView
@@ -99,7 +102,8 @@
                     android:textSize="16sp"
                     android:textStyle="bold"
                     style="@style/TextPrimary"
-                    android:layout_marginBottom="8dp" />
+                    android:layout_marginBottom="8dp"
+                    android:fontFamily="@font/noto_sans_bold" />
 
                 <EditText
                     android:id="@+id/isbnInput"
@@ -112,7 +116,8 @@
                     android:textSize="16sp"
                     android:textColor="@color/text_primary"
                     android:textColorHint="@color/text_secondary"
-                    android:layout_marginBottom="12dp" />
+                    android:layout_marginBottom="8dp"
+                    android:fontFamily="@font/noto_sans_regular" />
 
                 <Button
                     android:id="@+id/fetchDetailsButton"
@@ -124,7 +129,8 @@
                     android:textSize="14sp"
                     android:textStyle="bold"
                     android:textColor="@color/text_primary"
-                    android:paddingHorizontal="16dp" />
+                    android:paddingHorizontal="16dp"
+                    android:fontFamily="@font/manrope_bold" />
             </LinearLayout>
 
             <!-- Book Details Inputs -->
@@ -135,7 +141,8 @@
                 android:textSize="16sp"
                 android:textStyle="bold"
                 style="@style/TextPrimary"
-                android:layout_marginBottom="8dp" />
+                android:layout_marginBottom="8dp"
+                android:fontFamily="@font/noto_sans_bold" />
 
             <EditText
                 android:id="@+id/titleInput"
@@ -147,8 +154,9 @@
                 android:textSize="16sp"
                 android:textColor="@color/text_primary"
                 android:textColorHint="@color/text_secondary"
-                android:layout_marginBottom="16dp"
-                android:enabled="false" />
+                android:layout_marginBottom="8dp"
+                android:enabled="false"
+                android:fontFamily="@font/noto_sans_regular" />
 
             <TextView
                 android:layout_width="wrap_content"
@@ -157,7 +165,8 @@
                 android:textSize="16sp"
                 android:textStyle="bold"
                 style="@style/TextPrimary"
-                android:layout_marginBottom="8dp" />
+                android:layout_marginBottom="8dp"
+                android:fontFamily="@font/noto_sans_bold" />
 
             <EditText
                 android:id="@+id/authorInput"
@@ -169,8 +178,9 @@
                 android:textSize="16sp"
                 android:textColor="@color/text_primary"
                 android:textColorHint="@color/text_secondary"
-                android:layout_marginBottom="16dp"
-                android:enabled="false" />
+                android:layout_marginBottom="8dp"
+                android:enabled="false"
+                android:fontFamily="@font/noto_sans_regular" />
 
             <TextView
                 android:layout_width="wrap_content"
@@ -179,7 +189,8 @@
                 android:textSize="16sp"
                 android:textStyle="bold"
                 style="@style/TextPrimary"
-                android:layout_marginBottom="8dp" />
+                android:layout_marginBottom="8dp"
+                android:fontFamily="@font/noto_sans_bold" />
 
             <EditText
                 android:id="@+id/publisherInput"
@@ -191,8 +202,9 @@
                 android:textSize="16sp"
                 android:textColor="@color/text_primary"
                 android:textColorHint="@color/text_secondary"
-                android:layout_marginBottom="16dp"
-                android:enabled="false" />
+                android:layout_marginBottom="8dp"
+                android:enabled="false"
+                android:fontFamily="@font/noto_sans_regular" />
 
             <TextView
                 android:layout_width="wrap_content"
@@ -201,7 +213,8 @@
                 android:textSize="16sp"
                 android:textStyle="bold"
                 style="@style/TextPrimary"
-                android:layout_marginBottom="8dp" />
+                android:layout_marginBottom="8dp"
+                android:fontFamily="@font/noto_sans_bold" />
 
             <EditText
                 android:id="@+id/editionInput"
@@ -213,8 +226,9 @@
                 android:textSize="16sp"
                 android:textColor="@color/text_primary"
                 android:textColorHint="@color/text_secondary"
-                android:layout_marginBottom="16dp"
-                android:enabled="false" />
+                android:layout_marginBottom="8dp"
+                android:enabled="false"
+                android:fontFamily="@font/noto_sans_regular" />
 
             <TextView
                 android:layout_width="wrap_content"
@@ -223,7 +237,8 @@
                 android:textSize="16sp"
                 android:textStyle="bold"
                 style="@style/TextPrimary"
-                android:layout_marginBottom="8dp" />
+                android:layout_marginBottom="8dp"
+                android:fontFamily="@font/noto_sans_bold" />
 
             <EditText
                 android:id="@+id/yearInput"
@@ -236,8 +251,9 @@
                 android:textSize="16sp"
                 android:textColor="@color/text_primary"
                 android:textColorHint="@color/text_secondary"
-                android:layout_marginBottom="16dp"
-                android:enabled="false" />
+                android:layout_marginBottom="8dp"
+                android:enabled="false"
+                android:fontFamily="@font/noto_sans_regular" />
 
             <TextView
                 android:layout_width="wrap_content"
@@ -246,7 +262,8 @@
                 android:textSize="16sp"
                 android:textStyle="bold"
                 style="@style/TextPrimary"
-                android:layout_marginBottom="8dp" />
+                android:layout_marginBottom="8dp"
+                android:fontFamily="@font/noto_sans_bold" />
 
             <EditText
                 android:id="@+id/genreInput"
@@ -258,7 +275,8 @@
                 android:textSize="16sp"
                 android:textColor="@color/text_primary"
                 android:textColorHint="@color/text_secondary"
-                android:layout_marginBottom="16dp" />
+                android:layout_marginBottom="8dp"
+                android:fontFamily="@font/noto_sans_regular" />
 
             <TextView
                 android:layout_width="wrap_content"
@@ -267,7 +285,8 @@
                 android:textSize="16sp"
                 android:textStyle="bold"
                 style="@style/TextPrimary"
-                android:layout_marginBottom="8dp" />
+                android:layout_marginBottom="8dp"
+                android:fontFamily="@font/noto_sans_bold" />
 
             <EditText
                 android:id="@+id/placeNameInput"
@@ -279,14 +298,15 @@
                 android:textSize="16sp"
                 android:textColor="@color/text_primary"
                 android:textColorHint="@color/text_secondary"
-                android:layout_marginBottom="16dp" />
+                android:layout_marginBottom="8dp"
+                android:fontFamily="@font/noto_sans_regular" />
 
             <!-- Action Selection -->
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="horizontal"
-                android:layout_marginBottom="16dp">
+                android:layout_marginBottom="12dp">
 
                 <RadioGroup
                     android:id="@+id/actionRadioGroup"
@@ -298,7 +318,7 @@
                     <RadioButton
                         android:id="@+id/actionSwap"
                         android:layout_width="0dp"
-                        android:layout_height="44dp"
+                        android:layout_height="40dp"
                         android:layout_weight="1"
                         android:background="@drawable/radio_background"
                         android:button="@android:color/transparent"
@@ -306,12 +326,13 @@
                         android:text="Swap"
                         android:textSize="14sp"
                         style="@style/TextPrimary"
-                        android:layout_marginEnd="12dp" />
+                        android:layout_marginEnd="8dp"
+                        android:fontFamily="@font/noto_sans_regular" />
 
                     <RadioButton
                         android:id="@+id/actionSell"
                         android:layout_width="0dp"
-                        android:layout_height="44dp"
+                        android:layout_height="40dp"
                         android:layout_weight="1"
                         android:background="@drawable/radio_background"
                         android:button="@android:color/transparent"
@@ -319,19 +340,21 @@
                         android:text="Sell"
                         android:textSize="14sp"
                         style="@style/TextPrimary"
-                        android:layout_marginEnd="12dp" />
+                        android:layout_marginEnd="8dp"
+                        android:fontFamily="@font/noto_sans_regular" />
 
                     <RadioButton
                         android:id="@+id/actionLend"
                         android:layout_width="0dp"
-                        android:layout_height="44dp"
+                        android:layout_height="40dp"
                         android:layout_weight="1"
                         android:background="@drawable/radio_background"
                         android:button="@android:color/transparent"
                         android:gravity="center"
                         android:text="Lend"
                         android:textSize="14sp"
-                        style="@style/TextPrimary" />
+                        style="@style/TextPrimary"
+                        android:fontFamily="@font/noto_sans_regular" />
                 </RadioGroup>
             </LinearLayout>
 
@@ -341,7 +364,7 @@
                 android:layout_height="wrap_content"
                 android:orientation="horizontal"
                 android:gravity="center"
-                android:layout_marginBottom="16dp">
+                android:layout_marginBottom="12dp">
 
                 <Button
                     android:id="@+id/cancelButton"
@@ -353,7 +376,8 @@
                     android:textSize="14sp"
                     android:textStyle="bold"
                     android:textColor="@color/white"
-                    android:layout_marginEnd="12dp" />
+                    android:layout_marginEnd="8dp"
+                    android:fontFamily="@font/manrope_bold" />
 
                 <Button
                     android:id="@+id/saveButton"
@@ -364,17 +388,26 @@
                     android:text="Save"
                     android:textSize="14sp"
                     android:textStyle="bold"
-                    android:textColor="@color/white" />
+                    android:textColor="@color/white"
+                    android:fontFamily="@font/manrope_bold" />
             </LinearLayout>
-
-            <!-- Loading Spinner -->
-            <ProgressBar
-                android:id="@+id/loadingSpinner"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_gravity="center"
-                android:layout_marginTop="16dp"
-                android:visibility="gone" />
         </LinearLayout>
     </ScrollView>
+
+    <!-- Loading Overlay -->
+    <FrameLayout
+        android:id="@+id/loadingOverlay"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="#80000000"
+        android:visibility="gone">
+
+        <ProgressBar
+            android:id="@+id/loadingProgressBar"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:indeterminateTint="#A3BFFA"
+            android:visibility="gone" />
+    </FrameLayout>
 </LinearLayout>

@@ -36,7 +36,8 @@
             android:textSize="18sp"
             android:textStyle="bold"
             android:textColor="#0d0d1c"
-            android:gravity="center" />
+            android:gravity="center"
+            android:fontFamily="@font/manrope_bold" />
     </LinearLayout>
 
     <!-- Main Content -->
@@ -68,7 +69,8 @@
                 android:textColor="#0d0d1c"
                 android:textColorHint="#4b489d"
                 android:textSize="16sp"
-                android:inputType="text" />
+                android:inputType="text"
+                android:fontFamily="@font/noto_sans_regular" />
         </LinearLayout>
 
         <!-- Filter Section -->
@@ -111,7 +113,8 @@
             android:textSize="14sp"
             android:textStyle="bold"
             android:textColor="#f8f8fc"
-            android:paddingHorizontal="16dp" />
+            android:paddingHorizontal="16dp"
+            android:fontFamily="@font/manrope_bold" />
 
         <!-- RecyclerView for Books -->
         <androidx.recyclerview.widget.RecyclerView
@@ -170,7 +173,8 @@
         android:text="No books from other users found 😢"
         android:textSize="16sp"
         android:textColor="#0d0d1c"
-        android:visibility="gone" />
+        android:visibility="gone"
+        android:fontFamily="@font/noto_sans_regular" />
 
     <!-- Bottom Navigation -->
     <com.google.android.material.bottomnavigation.BottomNavigationView

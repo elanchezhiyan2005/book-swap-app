@@ -12,6 +12,7 @@ import android.text.Editable;
 import android.text.TextWatcher;
 import android.util.Log;
 import android.view.View;
+import android.view.animation.LayoutAnimationController;
 import android.view.animation.OvershootInterpolator;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
@@ -52,9 +53,12 @@ public class ViewBooksActivity extends AppCompatActivity {
     private List<BookModel> bookList = new ArrayList<>();
     private List<BookModel> bookListFull = new ArrayList<>(); // For search
     private List<BookModel> allBooks = new ArrayList<>(); // All books before pagination
+    private List<BookModel> originalAllBooks = new ArrayList<>(); // Store unfiltered books for live search
     private FusedLocationProviderClient fusedLocationClient;
     private FirebaseFirestore db;
     private double userLat = 0.0, userLon = 0.0;
+    private boolean isLocationPending = false; // Track if we're waiting for a location
+    private boolean isFetchingBooks = false; // Track if we're currently fetching books
     private int selectedDistance = 2; // Default 2km
     private String selectedAction = "All"; // Default action filter
     private String currentQuery = ""; // Current search query
@@ -70,6 +74,7 @@ public class ViewBooksActivity extends AppCompatActivity {
     private LinearLayout paginationContainer;
 
     private static final int BOOKS_PER_PAGE = 10;
+    private static final int REQUEST_LOCATION_PERMISSION = 1;
     private int currentPage = 1;
     private int totalPages = 1;
     private DocumentSnapshot lastVisibleDocument = null;
@@ -82,6 +87,11 @@ public class ViewBooksActivity extends AppCompatActivity {
                 userLat = location.getLatitude();
                 userLon = location.getLongitude();
                 Log.d("LocationUpdate", "User Location: " + userLat + ", " + userLon);
+                // If we were waiting for a location, fetch books now
+                if (isLocationPending) {
+                    isLocationPending = false;
+                    fetchBooks();
+                }
             }
         }
     };
@@ -107,10 +117,11 @@ public class ViewBooksActivity extends AppCompatActivity {
         adapter = new ViewBookAdapter(this, bookList);
         recyclerView.setAdapter(adapter);
 
+        // Add layout animation for RecyclerView items
+        LayoutAnimationController animation = android.view.animation.AnimationUtils.loadLayoutAnimation(this, R.anim.layout_item_slide_in);
+        recyclerView.setLayoutAnimation(animation);
+
         // Enable smooth scrolling animation
-        recyclerView.setLayoutAnimation(
-                android.view.animation.AnimationUtils.loadLayoutAnimation(
-                        this, R.anim.layout_animation_fall_down));
         recyclerView.setItemAnimator(new androidx.recyclerview.widget.DefaultItemAnimator() {
             @Override
             public void onAnimationFinished(@NonNull RecyclerView.ViewHolder viewHolder) {
@@ -172,7 +183,7 @@ public class ViewBooksActivity extends AppCompatActivity {
             finish();
         });
 
-        // Search functionality
+        // Search functionality with live filtering
         searchEditText.addTextChangedListener(new TextWatcher() {
             @Override
             public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
@@ -184,14 +195,14 @@ public class ViewBooksActivity extends AppCompatActivity {
             public void afterTextChanged(Editable s) {
                 currentQuery = s.toString().trim();
                 currentPage = 1; // Reset to page 1 on new search query
-                fetchBooks(); // Fetch books with the new query
+                filterBooks(); // Filter locally instead of fetching from Firestore
             }
         });
 
         // Apply Filters button to fetch books
         applyFiltersButton.setOnClickListener(v -> {
             currentPage = 1; // Reset to page 1 when applying filters
-            fetchBooks();
+            fetchBooksWithLocationCheck();
         });
 
         // Bottom Navigation
@@ -205,7 +216,7 @@ public class ViewBooksActivity extends AppCompatActivity {
             } else if (itemId == R.id.nav_browse) {
                 return true;
             } else if (itemId == R.id.nav_add) {
-                startActivity(new Intent(this, AddNewBookActivity.class));
+                startActivity(new Intent(this, AddBookActivity.class));
                 finish();
                 return true;
             } else if (itemId == R.id.nav_chat) {
@@ -229,6 +240,8 @@ public class ViewBooksActivity extends AppCompatActivity {
             startActivity(new Intent(android.provider.Settings.ACTION_LOCATION_SOURCE_SETTINGS));
         } else {
             startLocationUpdates();
+            // Try to get the last known location immediately
+            getLastKnownLocation();
         }
     }
 
@@ -236,21 +249,65 @@ public class ViewBooksActivity extends AppCompatActivity {
         LocationRequest locationRequest = LocationRequest.create()
                 .setPriority(Priority.PRIORITY_HIGH_ACCURACY)
                 .setInterval(5000)
-                .setFastestInterval(2000);
+                .setFastestInterval(2000)
+                .setSmallestDisplacement(10); // Require at least 10m movement for updates
 
         if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
             fusedLocationClient.requestLocationUpdates(locationRequest, locationCallback, Looper.getMainLooper());
         } else {
-            ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, 1);
+            ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, REQUEST_LOCATION_PERMISSION);
         }
     }
 
-    private void fetchBooks() {
+    private void getLastKnownLocation() {
+        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
+            fusedLocationClient.getLastLocation()
+                    .addOnSuccessListener(this, location -> {
+                        if (location != null) {
+                            userLat = location.getLatitude();
+                            userLon = location.getLongitude();
+                            Log.d("LocationUpdate", "Last Known Location: " + userLat + ", " + userLon);
+                            // If we were waiting for a location, fetch books now
+                            if (isLocationPending) {
+                                isLocationPending = false;
+                                fetchBooks();
+                            }
+                        } else {
+                            Log.d("LocationUpdate", "Last known location not available");
+                        }
+                    })
+                    .addOnFailureListener(this, e -> {
+                        Log.e("LocationError", "Failed to get last known location: " + e.getMessage());
+                    });
+        }
+    }
+
+    private void fetchBooksWithLocationCheck() {
+        // Reset UI state before fetching
+        errorMessage.setVisibility(View.GONE); // Hide error message
         loadingOverlay.setVisibility(View.VISIBLE);
         loadingProgressBar.setVisibility(View.VISIBLE);
-        errorMessage.setVisibility(View.GONE);
-        bookList.clear();
-        allBooks.clear();
+
+        // Check if we have a location
+        if (userLat == 0.0 || userLon == 0.0) {
+            // If we don't have a location yet, try to get the last known location
+            getLastKnownLocation();
+            // If we still don't have a location, wait for the callback
+            if (userLat == 0.0 || userLon == 0.0) {
+                isLocationPending = true;
+                Toast.makeText(this, "Fetching your location, please wait...", Toast.LENGTH_SHORT).show();
+                return;
+            }
+        }
+        // If we have a location, proceed with fetching books
+        fetchBooks();
+    }
+
+    private void fetchBooks() {
+        isFetchingBooks = true; // Set flag to indicate fetching is in progress
+        loadingOverlay.setVisibility(View.VISIBLE);
+        loadingProgressBar.setVisibility(View.VISIBLE);
+        errorMessage.setVisibility(View.GONE); // Ensure error message is hidden
 
         Set<String> bookIds = new HashSet<>();
         String currentUserPhone = getSharedPreferences("BookSwapPrefs", MODE_PRIVATE).getString("phoneNumber", null);
@@ -260,6 +317,7 @@ public class ViewBooksActivity extends AppCompatActivity {
             Toast.makeText(this, "Please log in first!", Toast.LENGTH_LONG).show();
             loadingOverlay.setVisibility(View.GONE);
             loadingProgressBar.setVisibility(View.GONE);
+            isFetchingBooks = false;
             return;
         }
 
@@ -268,6 +326,7 @@ public class ViewBooksActivity extends AppCompatActivity {
             Toast.makeText(this, "Unable to get your location. Please try again.", Toast.LENGTH_LONG).show();
             loadingOverlay.setVisibility(View.GONE);
             loadingProgressBar.setVisibility(View.GONE);
+            isFetchingBooks = false;
             return;
         }
 
@@ -317,21 +376,17 @@ public class ViewBooksActivity extends AppCompatActivity {
                 }
             }
 
-            // Apply search filter to tempList
-            if (!currentQuery.isEmpty()) {
-                List<BookModel> filteredList = new ArrayList<>();
-                String queryLower = currentQuery.toLowerCase();
-                for (BookModel book : tempList) {
-                    if (book.getTitle().toLowerCase().contains(queryLower) ||
-                            book.getAuthor().toLowerCase().contains(queryLower)) {
-                        filteredList.add(book);
-                    }
-                }
-                tempList = filteredList;
-            }
-
+            // Update the lists only after fetching is complete
+            originalAllBooks.clear();
+            allBooks.clear();
+            bookList.clear();
+            originalAllBooks.addAll(tempList); // Store the unfiltered list
             allBooks.addAll(tempList);
             bookListFull = new ArrayList<>(tempList);
+
+            // Reset search query and clear search bar
+            currentQuery = "";
+            searchEditText.setText("");
 
             // Calculate total pages
             totalPages = (int) Math.ceil((double) allBooks.size() / BOOKS_PER_PAGE);
@@ -343,14 +398,18 @@ public class ViewBooksActivity extends AppCompatActivity {
             // Update pagination bar
             updatePaginationBar();
 
+            // Check if no books were found *after* all updates are done
             if (allBooks.isEmpty()) {
                 errorMessage.setVisibility(View.VISIBLE);
                 Toast.makeText(this, "No books from other users found within " + selectedDistance + "km!", Toast.LENGTH_SHORT).show();
+            } else {
+                errorMessage.setVisibility(View.GONE); // Explicitly hide the error message if books are found
             }
 
             loadingOverlay.setVisibility(View.GONE);
             loadingProgressBar.setVisibility(View.GONE);
             Log.d("UIDebug", "Loading overlay hidden");
+            isFetchingBooks = false; // Fetching is complete
         }).addOnFailureListener(e -> {
             Log.e("FirestoreError", "Error fetching books: " + e.getMessage());
             Toast.makeText(this, "Failed to fetch books", Toast.LENGTH_SHORT).show();
@@ -358,7 +417,46 @@ public class ViewBooksActivity extends AppCompatActivity {
             loadingProgressBar.setVisibility(View.GONE);
             errorMessage.setVisibility(View.VISIBLE);
             Log.d("UIDebug", "Loading overlay hidden");
+            isFetchingBooks = false; // Fetching is complete
         });
+    }
+
+    private void filterBooks() {
+        // Don't filter while fetching books
+        if (isFetchingBooks) {
+            Log.d("FilterDebug", "Skipping filterBooks() while fetching books");
+            return;
+        }
+
+        List<BookModel> filteredList = new ArrayList<>();
+        if (currentQuery.isEmpty()) {
+            filteredList.addAll(originalAllBooks); // Show all books if query is empty
+        } else {
+            String queryLower = currentQuery.toLowerCase();
+            for (BookModel book : originalAllBooks) {
+                if (book.getTitle().toLowerCase().contains(queryLower) ||
+                        book.getAuthor().toLowerCase().contains(queryLower)) {
+                    filteredList.add(book);
+                }
+            }
+        }
+
+        // Update allBooks with filtered results for pagination
+        allBooks.clear();
+        allBooks.addAll(filteredList);
+
+        // Update pagination and load the first page
+        totalPages = (int) Math.ceil((double) allBooks.size() / BOOKS_PER_PAGE);
+        if (totalPages == 0) totalPages = 1; // Ensure at least 1 page
+        loadPage(currentPage);
+        updatePaginationBar();
+
+        if (allBooks.isEmpty()) {
+            errorMessage.setVisibility(View.VISIBLE);
+            Toast.makeText(this, "No books match your search!", Toast.LENGTH_SHORT).show();
+        } else {
+            errorMessage.setVisibility(View.GONE);
+        }
     }
 
     private void loadPage(int page) {
@@ -376,6 +474,7 @@ public class ViewBooksActivity extends AppCompatActivity {
         Log.d("PaginationDebug", "Loaded page " + page + ": " + bookList.size() + " books");
         Log.d("PaginationDebug", "bookList size before notify: " + bookList.size());
         adapter.notifyDataSetChanged();
+        recyclerView.scheduleLayoutAnimation(); // Trigger animation
         recyclerView.scrollToPosition(0); // Scroll to top of the page
     }
 
@@ -420,11 +519,25 @@ public class ViewBooksActivity extends AppCompatActivity {
     protected void onResume() {
         super.onResume();
         startLocationUpdates();
+        getLastKnownLocation(); // Try to get location on resume
     }
 
     @Override
     protected void onPause() {
         super.onPause();
         fusedLocationClient.removeLocationUpdates(locationCallback);
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+        if (requestCode == REQUEST_LOCATION_PERMISSION) {
+            if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                startLocationUpdates();
+                getLastKnownLocation();
+            } else {
+                Toast.makeText(this, "Location permission denied. Cannot fetch books.", Toast.LENGTH_LONG).show();
+            }
+        }
     }
 }

@@ -26,7 +26,7 @@
             android:textStyle="bold"
             android:textColor="#0d141c"
             android:gravity="center"
-            android:paddingStart="48dp" />
+            android:fontFamily="@font/manrope_bold" />
 
         <!-- Question Mark Icon Button -->
         <ImageButton
@@ -51,7 +51,8 @@
         android:gravity="center"
         android:paddingHorizontal="16dp"
         android:paddingTop="20dp"
-        android:paddingBottom="12dp" />
+        android:paddingBottom="8dp"
+        android:fontFamily="@font/noto_sans_bold" />
 
     <!-- Phone Number Input -->
     <LinearLayout
@@ -71,7 +72,7 @@
             android:textSize="16sp"
             android:textColor="#0d141c"
             android:textColorHint="#49739c"
-            android:fontFamily="sans-serif" />
+            android:fontFamily="@font/noto_sans_regular" />
     </LinearLayout>
 
     <!-- Instruction Text -->
@@ -84,13 +85,8 @@
         android:gravity="center"
         android:paddingHorizontal="16dp"
         android:paddingTop="4dp"
-        android:paddingBottom="12dp" />
-
-    <!-- Spacer to push the button to the bottom -->
-    <View
-        android:layout_width="match_parent"
-        android:layout_height="0dp"
-        android:layout_weight="1" />
+        android:paddingBottom="12dp"
+        android:fontFamily="@font/noto_sans_regular" />
 
     <!-- Send OTP Button -->
     <LinearLayout
@@ -108,7 +104,8 @@
             android:textStyle="bold"
             android:textColor="#ffffff"
             android:background="@drawable/button_background"
-            android:backgroundTint="@null" />
+            android:backgroundTint="@null"
+            android:fontFamily="@font/manrope_bold" />
     </LinearLayout>
 
     <!-- ProgressBar -->

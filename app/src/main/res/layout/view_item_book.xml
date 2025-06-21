@@ -40,7 +40,8 @@
                 android:text="Book Title"
                 android:textSize="16sp"
                 android:textStyle="bold"
-                android:textColor="#0d0d1c" />
+                android:textColor="#0d0d1c"
+                android:fontFamily="@font/noto_sans_bold" />
 
             <TextView
                 android:id="@+id/bookAuthorTextView"
@@ -49,7 +50,8 @@
                 android:layout_marginTop="4dp"
                 android:text="Author Name"
                 android:textSize="14sp"
-                android:textColor="#4b489d" />
+                android:textColor="#4b489d"
+                android:fontFamily="@font/noto_sans_regular" />
 
             <TextView
                 android:id="@+id/bookPlaceTextView"
@@ -58,7 +60,8 @@
                 android:layout_marginTop="4dp"
                 android:text="Place"
                 android:textSize="12sp"
-                android:textColor="#0d0d1c" />
+                android:textColor="#0d0d1c"
+                android:fontFamily="@font/noto_sans_regular" />
         </LinearLayout>
 
         <!-- Action Button -->
@@ -70,6 +73,7 @@
             android:text="Action"
             android:textSize="12sp"
             android:paddingHorizontal="12dp"
-            android:background="@drawable/action_button_background" />
+            android:background="@drawable/action_button_background"
+            android:fontFamily="@font/manrope_bold" />
     </LinearLayout>
 </androidx.cardview.widget.CardView>

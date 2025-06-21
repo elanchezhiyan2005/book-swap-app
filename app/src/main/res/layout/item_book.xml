@@ -31,7 +31,8 @@
             android:layout_height="wrap_content"
             android:text="Book Title"
             android:textSize="16sp"
-            style="@style/TextPrimary" />
+            style="@style/TextPrimary"
+            android:fontFamily="@font/noto_sans_bold" />
 
         <TextView
             android:id="@+id/authorText"
@@ -39,7 +40,8 @@
             android:layout_height="wrap_content"
             android:text="Author"
             android:textSize="14sp"
-            style="@style/TextPrimary" />
+            style="@style/TextPrimary"
+            android:fontFamily="@font/noto_sans_regular" />
 
         <TextView
             android:id="@+id/publisherText"
@@ -47,7 +49,8 @@
             android:layout_height="wrap_content"
             android:text="Action (Swap/Sell/Lend)"
             android:textSize="14sp"
-            style="@style/TextPrimary" />
+            style="@style/TextPrimary"
+            android:fontFamily="@font/noto_sans_regular" />
     </LinearLayout>
 
     <!-- Delete Icon -->

@@ -21,6 +21,7 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 import com.google.android.gms.location.FusedLocationProviderClient;
 import com.google.android.gms.location.LocationServices;
+import com.google.android.material.snackbar.Snackbar;
 import com.google.firebase.firestore.FieldValue;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.WriteBatch;
@@ -44,7 +45,8 @@ public class AddNewBookActivity extends AppCompatActivity {
     private EditText isbnInput, titleInput, authorInput, publisherInput, editionInput, placeNameInput, yearInput, genreInput;
     private LinearLayout isbnFetchLayout;
     private Button fetchDetailsButton, saveButton, cancelButton;
-    private ProgressBar loadingSpinner;
+    private FrameLayout loadingOverlay;
+    private ProgressBar loadingProgressBar;
     private FirebaseFirestore db;
     private FusedLocationProviderClient fusedLocationClient;
     private double latitude, longitude;
@@ -53,19 +55,18 @@ public class AddNewBookActivity extends AppCompatActivity {
     private String fetchedImageUrl;
     private volatile boolean isFinishing;
     private String selectedAction;
+    private boolean isSaveValid = false; // New flag to track validation
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_add_new_book);
 
-        // Initialize Firestore and location client
         db = FirebaseFirestore.getInstance();
         fusedLocationClient = LocationServices.getFusedLocationProviderClient(this);
         executorService = Executors.newFixedThreadPool(2);
         isFinishing = false;
 
-        // Get user phone number from SharedPreferences
         SharedPreferences prefs = getSharedPreferences("BookSwapPrefs", MODE_PRIVATE);
         userPhoneNumber = prefs.getString("phoneNumber", null);
         if (userPhoneNumber == null) {
@@ -74,7 +75,6 @@ public class AddNewBookActivity extends AppCompatActivity {
             return;
         }
 
-        // Initialize UI components
         backButton = findViewById(R.id.backButton);
         isbnRadioGroup = findViewById(R.id.isbnRadioGroup);
         actionRadioGroup = findViewById(R.id.actionRadioGroup);
@@ -90,9 +90,9 @@ public class AddNewBookActivity extends AppCompatActivity {
         genreInput = findViewById(R.id.genreInput);
         saveButton = findViewById(R.id.saveButton);
         cancelButton = findViewById(R.id.cancelButton);
-        loadingSpinner = findViewById(R.id.loadingSpinner);
+        loadingOverlay = findViewById(R.id.loadingOverlay);
+        loadingProgressBar = findViewById(R.id.loadingProgressBar);
 
-        // Disable input fields initially (except Genre and Location)
         titleInput.setEnabled(false);
         authorInput.setEnabled(false);
         publisherInput.setEnabled(false);
@@ -102,7 +102,8 @@ public class AddNewBookActivity extends AppCompatActivity {
         placeNameInput.setEnabled(true);
         isbnFetchLayout.setVisibility(View.VISIBLE);
 
-        // Back Button
+        checkLocationPermission();
+
         backButton.setOnClickListener(v -> {
             Intent intent = new Intent(this, AddBookActivity.class);
             intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
@@ -110,7 +111,6 @@ public class AddNewBookActivity extends AppCompatActivity {
             finish();
         });
 
-        // ISBN Radio Button Listener
         isbnRadioGroup.setOnCheckedChangeListener((group, checkedId) -> {
             if (checkedId == R.id.radioYes) {
                 isbnFetchLayout.setVisibility(View.VISIBLE);
@@ -135,37 +135,35 @@ public class AddNewBookActivity extends AppCompatActivity {
             }
         });
 
-        // Action Radio Button Listener
         actionRadioGroup.setOnCheckedChangeListener((group, checkedId) -> {
-            if (checkedId == R.id.actionSwap) {
-                selectedAction = "Swap";
-            } else if (checkedId == R.id.actionSell) {
-                selectedAction = "Sell";
-            } else if (checkedId == R.id.actionLend) {
-                selectedAction = "Lend";
-            }
+            if (checkedId == R.id.actionSwap) selectedAction = "Swap";
+            else if (checkedId == R.id.actionSell) selectedAction = "Sell";
+            else if (checkedId == R.id.actionLend) selectedAction = "Lend";
         });
 
-        // Default action
         actionRadioGroup.check(R.id.actionSwap);
         selectedAction = "Swap";
 
-        // Fetch Details Button Listener
         fetchDetailsButton.setOnClickListener(v -> {
             String isbnCode = isbnInput.getText().toString().trim();
             if (isbnCode.isEmpty()) {
                 Toast.makeText(this, "Please enter a valid ISBN", Toast.LENGTH_SHORT).show();
             } else {
-                loadingSpinner.setVisibility(View.VISIBLE);
+                showLoadingOverlay();
                 fetchDetailsButton.setEnabled(false);
                 new FetchBookDetailsTask().execute(isbnCode);
             }
         });
 
-        // Save Button Listener
-        saveButton.setOnClickListener(v -> getLocationAndSaveBook());
+        saveButton.setOnClickListener(v -> {
+            if (validateInputs()) {
+                isSaveValid = true; // Set flag to allow save
+                getLocationAndSaveBook();
+            } else {
+                isSaveValid = false; // Ensure save is blocked
+            }
+        });
 
-        // Cancel Button Listener
         cancelButton.setOnClickListener(v -> {
             Intent intent = new Intent(this, AddBookActivity.class);
             intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
@@ -174,23 +172,57 @@ public class AddNewBookActivity extends AppCompatActivity {
         });
     }
 
-    private void getLocationAndSaveBook() {
-        // First, check if location permissions are granted
+    private void checkLocationPermission() {
         if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
             ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, LOCATION_PERMISSION_REQUEST_CODE);
+        } else if (!isLocationEnabled()) {
+            promptToEnableLocation();
+        }
+    }
+
+    private boolean validateInputs() {
+        String title = titleInput.getText().toString().trim();
+        String author = authorInput.getText().toString().trim();
+        String isbn = isbnInput.getText().toString().trim();
+        String publisher = publisherInput.getText().toString().trim();
+        String edition = editionInput.getText().toString().trim();
+        String placeName = placeNameInput.getText().toString().trim();
+        String year = yearInput.getText().toString().trim();
+        String genre = genreInput.getText().toString().trim();
+
+        if (title.isEmpty() || author.isEmpty() || publisher.isEmpty() || edition.isEmpty() ||
+                placeName.isEmpty() || year.isEmpty() || genre.isEmpty()) {
+            Snackbar.make(findViewById(android.R.id.content), "Please fill in all details", Snackbar.LENGTH_SHORT).show();
+            Log.w("InputValidation", "Missing fields: title=" + title + ", author=" + author + ", publisher=" + publisher +
+                    ", edition=" + edition + ", place=" + placeName + ", year=" + year + ", genre=" + genre);
+            return false;
+        }
+        if (selectedAction == null) {
+            Snackbar.make(findViewById(android.R.id.content), "Please select an action (Swap, Sell, or Lend)", Snackbar.LENGTH_SHORT).show();
+            Log.w("InputValidation", "No action selected");
+            return false;
+        }
+        return true;
+    }
+
+    private void getLocationAndSaveBook() {
+        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+            Snackbar.make(findViewById(android.R.id.content), "Location permission required", Snackbar.LENGTH_INDEFINITE)
+                    .setAction("Grant", v -> checkLocationPermission()).show();
+            Log.e("LocationPermission", "Permission not granted");
+            return;
+        }
+        if (!isLocationEnabled()) {
+            promptToEnableLocation();
         } else {
-            // Check if GPS is enabled
-            if (!isLocationEnabled()) {
-                promptToEnableLocation();
-            } else {
-                fetchCurrentLocation();
-            }
+            fetchCurrentLocation();
         }
     }
 
     private boolean isLocationEnabled() {
         LocationManager locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
         if (locationManager == null) {
+            Log.e("LocationManager", "LocationManager is null");
             return false;
         }
         return locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER) ||
@@ -206,7 +238,7 @@ public class AddNewBookActivity extends AppCompatActivity {
                     startActivityForResult(intent, REQUEST_CODE_LOCATION_SETTINGS);
                 })
                 .setNegativeButton("Cancel", (dialog, which) -> {
-                    Toast.makeText(this, "Location services are required to save the book.", Toast.LENGTH_SHORT).show();
+                    Snackbar.make(findViewById(android.R.id.content), "Location services are required to save the book.", Snackbar.LENGTH_SHORT).show();
                 })
                 .setCancelable(false)
                 .show();
@@ -219,7 +251,7 @@ public class AddNewBookActivity extends AppCompatActivity {
             if (isLocationEnabled()) {
                 fetchCurrentLocation();
             } else {
-                Toast.makeText(this, "Location services are still disabled. Please enable GPS to proceed.", Toast.LENGTH_SHORT).show();
+                Snackbar.make(findViewById(android.R.id.content), "Location services are still disabled. Please enable GPS to proceed.", Snackbar.LENGTH_SHORT).show();
             }
         }
     }
@@ -231,20 +263,30 @@ public class AddNewBookActivity extends AppCompatActivity {
                         if (location != null) {
                             latitude = location.getLatitude();
                             longitude = location.getLongitude();
-                            saveBookDetails();
+                            if (isSaveValid) saveBookDetails(); // Only proceed if validation passed
                         } else {
-                            Toast.makeText(this, "Failed to get location. Ensure GPS is enabled and try again.", Toast.LENGTH_SHORT).show();
+                            showErrorSnackbar("Failed to get location. Ensure GPS is enabled and try again.");
                             Log.e("LocationError", "Location is null");
                         }
                     })
                     .addOnFailureListener(e -> {
-                        Toast.makeText(this, "Error fetching location: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+                        showErrorSnackbar("Error fetching location: " + e.getMessage());
                         Log.e("LocationError", "Error getting location", e);
                     });
         }
     }
 
     private void saveBookDetails() {
+        Log.d("SaveBook", "Starting saveBookDetails with isSaveValid=" + isSaveValid);
+        if (!isSaveValid) {
+            hideLoadingOverlay();
+            saveButton.setEnabled(true);
+            cancelButton.setEnabled(true);
+            fetchDetailsButton.setEnabled(true);
+            showErrorSnackbar("Save aborted due to invalid input.");
+            return;
+        }
+
         String title = titleInput.getText().toString().trim();
         String author = authorInput.getText().toString().trim();
         String isbn = isbnInput.getText().toString().trim();
@@ -254,26 +296,13 @@ public class AddNewBookActivity extends AppCompatActivity {
         String year = yearInput.getText().toString().trim();
         String genre = genreInput.getText().toString().trim();
 
-        // Validate inputs
-        if (title.isEmpty() || author.isEmpty() || publisher.isEmpty() || edition.isEmpty() || placeName.isEmpty() || year.isEmpty() || genre.isEmpty()) {
-            Toast.makeText(this, "Please fill in all details", Toast.LENGTH_SHORT).show();
-            return;
-        }
-
-        if (selectedAction == null) {
-            Toast.makeText(this, "Please select an action (Swap, Sell, or Lend)", Toast.LENGTH_SHORT).show();
-            return;
-        }
-
-        if (userPhoneNumber == null || userPhoneNumber.isEmpty()) {
-            Toast.makeText(this, "User session not found. Please log in again.", Toast.LENGTH_LONG).show();
-            Log.e("SaveBookError", "userPhoneNumber is null or empty");
-            return;
-        }
-
         if (latitude == 0.0 && longitude == 0.0) {
-            Toast.makeText(this, "Location not fetched. Ensure GPS is enabled.", Toast.LENGTH_LONG).show();
+            hideLoadingOverlay();
+            showErrorSnackbar("Location not fetched. Ensure GPS is enabled.");
             Log.e("SaveBookError", "Location not set: lat=" + latitude + ", lon=" + longitude);
+            saveButton.setEnabled(true);
+            cancelButton.setEnabled(true);
+            fetchDetailsButton.setEnabled(true);
             return;
         }
 
@@ -286,22 +315,17 @@ public class AddNewBookActivity extends AppCompatActivity {
             imageUrl = "https://via.placeholder.com/150";
         }
 
-        // Show loading spinner and disable buttons
-        runOnUiThread(() -> {
-            loadingSpinner.setVisibility(View.VISIBLE);
-            saveButton.setEnabled(false);
-            cancelButton.setEnabled(false);
-            fetchDetailsButton.setEnabled(false);
-        });
+        showLoadingOverlay();
+        saveButton.setEnabled(false);
+        cancelButton.setEnabled(false);
+        fetchDetailsButton.setEnabled(false);
 
         if (isFinishing) {
-            runOnUiThread(() -> {
-                loadingSpinner.setVisibility(View.GONE);
-                saveButton.setEnabled(true);
-                cancelButton.setEnabled(true);
-                fetchDetailsButton.setEnabled(true);
-                Toast.makeText(this, "Cannot save book: Activity is closing.", Toast.LENGTH_SHORT).show();
-            });
+            hideLoadingOverlay();
+            saveButton.setEnabled(true);
+            cancelButton.setEnabled(true);
+            fetchDetailsButton.setEnabled(true);
+            showErrorSnackbar("Cannot save book: Activity is closing.");
             return;
         }
 
@@ -354,8 +378,7 @@ public class AddNewBookActivity extends AppCompatActivity {
 
                 batch.commit()
                         .addOnSuccessListener(aVoid -> runOnUiThread(() -> {
-                            loadingSpinner.setVisibility(View.GONE);
-
+                            hideLoadingOverlay();
                             Toast toast = new Toast(this);
                             View toastView = getLayoutInflater().inflate(R.layout.toast_success, (ViewGroup) findViewById(android.R.id.content), false);
                             toast.setView(toastView);
@@ -374,20 +397,32 @@ public class AddNewBookActivity extends AppCompatActivity {
                                 finish();
                             }, 2000);
                         }))
-                        .addOnFailureListener(e -> runOnUiThread(() -> {
-                            loadingSpinner.setVisibility(View.GONE);
-                            Toast.makeText(this, "Failed to add book: " + e.getMessage(), Toast.LENGTH_LONG).show();
+                        .addOnFailureListener(e -> {
+                            hideLoadingOverlay();
+                            showErrorSnackbar("Failed to add book: " + e.getMessage()).setAction("Retry", v -> {
+                                if (validateInputs()) {
+                                    isSaveValid = true;
+                                    getLocationAndSaveBook();
+                                }
+                            });
                             Log.e("FirestoreError", "Batched write failed", e);
-                            saveButton.setEnabled(true);
-                            cancelButton.setEnabled(true);
-                            fetchDetailsButton.setEnabled(true);
-                        }));
+                            runOnUiThread(() -> {
+                                saveButton.setEnabled(true);
+                                cancelButton.setEnabled(true);
+                                fetchDetailsButton.setEnabled(true);
+                            });
+                        });
 
             } catch (Exception e) {
+                hideLoadingOverlay();
+                showErrorSnackbar("Error saving book: " + e.getMessage()).setAction("Retry", v -> {
+                    if (validateInputs()) {
+                        isSaveValid = true;
+                        getLocationAndSaveBook();
+                    }
+                });
+                Log.e("SaveBookError", "Exception in saving book", e);
                 runOnUiThread(() -> {
-                    loadingSpinner.setVisibility(View.GONE);
-                    Toast.makeText(this, "Error saving book: " + e.getMessage(), Toast.LENGTH_LONG).show();
-                    Log.e("SaveBookError", "Exception in saving book", e);
                     saveButton.setEnabled(true);
                     cancelButton.setEnabled(true);
                     fetchDetailsButton.setEnabled(true);
@@ -403,11 +438,10 @@ public class AddNewBookActivity extends AppCompatActivity {
             if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
                 if (!isLocationEnabled()) {
                     promptToEnableLocation();
-                } else {
-                    fetchCurrentLocation();
                 }
             } else {
-                Toast.makeText(this, "Location permission denied", Toast.LENGTH_SHORT).show();
+                Snackbar.make(findViewById(android.R.id.content), "Location permission denied", Snackbar.LENGTH_INDEFINITE)
+                        .setAction("Grant", v -> checkLocationPermission()).show();
             }
         }
     }
@@ -491,14 +525,13 @@ public class AddNewBookActivity extends AppCompatActivity {
 
         @Override
         protected void onPostExecute(JSONObject bookInfo) {
-            loadingSpinner.setVisibility(View.GONE);
+            hideLoadingOverlay();
             fetchDetailsButton.setEnabled(true);
 
             try {
                 if (bookInfo != null) {
                     if (!usingGoogleBooks) {
                         titleInput.setText(bookInfo.optString("title", "Unknown Title"));
-
                         if (bookInfo.has("authors")) {
                             JSONArray authors = bookInfo.getJSONArray("authors");
                             StringBuilder authorBuilder = new StringBuilder();
@@ -510,7 +543,6 @@ public class AddNewBookActivity extends AppCompatActivity {
                         } else {
                             authorInput.setText("Unknown Author");
                         }
-
                         if (bookInfo.has("publishers")) {
                             JSONArray publishers = bookInfo.getJSONArray("publishers");
                             StringBuilder publisherBuilder = new StringBuilder();
@@ -522,22 +554,15 @@ public class AddNewBookActivity extends AppCompatActivity {
                         } else {
                             publisherInput.setText("Unknown Publisher");
                         }
-
                         String publishDate = bookInfo.optString("publish_date", "");
-                        editionInput.setText(publishDate.isEmpty() ?
-                                "Unknown Edition" : "Edition: " + publishDate);
-
+                        editionInput.setText(publishDate.isEmpty() ? "Unknown Edition" : "Edition: " + publishDate);
                         if (!publishDate.isEmpty()) {
                             String[] dateParts = publishDate.split("-");
-                            if (dateParts.length > 0) {
-                                yearInput.setText(dateParts[0]);
-                            } else {
-                                yearInput.setText("");
-                            }
+                            if (dateParts.length > 0) yearInput.setText(dateParts[0]);
+                            else yearInput.setText("");
                         } else {
                             yearInput.setText("");
                         }
-
                         if (bookInfo.has("subjects")) {
                             JSONArray subjects = bookInfo.getJSONArray("subjects");
                             StringBuilder genreBuilder = new StringBuilder();
@@ -549,18 +574,14 @@ public class AddNewBookActivity extends AppCompatActivity {
                         } else {
                             genreInput.setText("");
                         }
-
                         fetchedImageUrl = "https://via.placeholder.com/150";
                         if (bookInfo.has("cover")) {
                             JSONObject cover = bookInfo.getJSONObject("cover");
                             String thumbnail = cover.optString("large", "");
-                            if (!thumbnail.isEmpty()) {
-                                fetchedImageUrl = thumbnail;
-                            }
+                            if (!thumbnail.isEmpty()) fetchedImageUrl = thumbnail;
                         }
                     } else {
                         titleInput.setText(bookInfo.optString("title", "Unknown Title"));
-
                         if (bookInfo.has("authors")) {
                             JSONArray authors = bookInfo.getJSONArray("authors");
                             StringBuilder authorBuilder = new StringBuilder();
@@ -572,24 +593,16 @@ public class AddNewBookActivity extends AppCompatActivity {
                         } else {
                             authorInput.setText("Unknown Author");
                         }
-
                         publisherInput.setText(bookInfo.optString("publisher", "Unknown Publisher"));
-
                         String publishedDate = bookInfo.optString("publishedDate", "");
-                        editionInput.setText(publishedDate.isEmpty() ?
-                                "Unknown Edition" : "Edition: " + publishedDate);
-
+                        editionInput.setText(publishedDate.isEmpty() ? "Unknown Edition" : "Edition: " + publishedDate);
                         if (!publishedDate.isEmpty()) {
                             String[] dateParts = publishedDate.split("-");
-                            if (dateParts.length > 0) {
-                                yearInput.setText(dateParts[0]);
-                            } else {
-                                yearInput.setText("");
-                            }
+                            if (dateParts.length > 0) yearInput.setText(dateParts[0]);
+                            else yearInput.setText("");
                         } else {
                             yearInput.setText("");
                         }
-
                         if (bookInfo.has("categories")) {
                             JSONArray categories = bookInfo.getJSONArray("categories");
                             StringBuilder genreBuilder = new StringBuilder();
@@ -601,23 +614,18 @@ public class AddNewBookActivity extends AppCompatActivity {
                         } else {
                             genreInput.setText("");
                         }
-
                         fetchedImageUrl = "https://via.placeholder.com/150";
                         if (bookInfo.has("imageLinks")) {
                             JSONObject imageLinks = bookInfo.getJSONObject("imageLinks");
                             String thumbnail = imageLinks.optString("thumbnail", "");
                             if (!thumbnail.isEmpty()) {
-                                fetchedImageUrl = thumbnail
-                                        .replace("http://", "https://")
-                                        .replace("&edge=curl", "");
+                                fetchedImageUrl = thumbnail.replace("http://", "https://").replace("&edge=curl", "");
                             }
                         }
                     }
-
                     if (fetchedImageUrl.equals("https://via.placeholder.com/150")) {
                         fetchedImageUrl = "https://covers.openlibrary.org/b/isbn/" + currentIsbn + "-L.jpg";
                     }
-
                     titleInput.setEnabled(false);
                     authorInput.setEnabled(false);
                     publisherInput.setEnabled(false);
@@ -625,7 +633,6 @@ public class AddNewBookActivity extends AppCompatActivity {
                     yearInput.setEnabled(false);
                     genreInput.setEnabled(true);
                     placeNameInput.setEnabled(true);
-
                 } else {
                     showManualEntryFallback();
                 }
@@ -637,10 +644,7 @@ public class AddNewBookActivity extends AppCompatActivity {
 
         private void showManualEntryFallback() {
             runOnUiThread(() -> {
-                Toast.makeText(AddNewBookActivity.this,
-                        "Failed to fetch details from both APIs. Enter manually.",
-                        Toast.LENGTH_LONG).show();
-
+                Snackbar.make(findViewById(android.R.id.content), "Failed to fetch details from both APIs. Enter manually.", Snackbar.LENGTH_LONG).show();
                 titleInput.setEnabled(true);
                 authorInput.setEnabled(true);
                 publisherInput.setEnabled(true);
@@ -648,7 +652,6 @@ public class AddNewBookActivity extends AppCompatActivity {
                 yearInput.setEnabled(true);
                 genreInput.setEnabled(true);
                 placeNameInput.setEnabled(true);
-
                 titleInput.setText("");
                 authorInput.setText("");
                 publisherInput.setText("");
@@ -658,6 +661,24 @@ public class AddNewBookActivity extends AppCompatActivity {
                 fetchedImageUrl = null;
             });
         }
+    }
+
+    private void showLoadingOverlay() {
+        runOnUiThread(() -> {
+            loadingOverlay.setVisibility(View.VISIBLE);
+            loadingProgressBar.setVisibility(View.VISIBLE);
+        });
+    }
+
+    private void hideLoadingOverlay() {
+        runOnUiThread(() -> {
+            loadingOverlay.setVisibility(View.GONE);
+            loadingProgressBar.setVisibility(View.GONE);
+        });
+    }
+
+    private Snackbar showErrorSnackbar(String message) {
+        return Snackbar.make(findViewById(android.R.id.content), message, Snackbar.LENGTH_INDEFINITE);
     }
 
     @Override

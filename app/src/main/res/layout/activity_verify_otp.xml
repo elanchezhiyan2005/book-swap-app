@@ -38,7 +38,8 @@
         android:textColor="#0d141c"
         android:paddingHorizontal="16dp"
         android:paddingTop="20dp"
-        android:paddingBottom="8dp" />
+        android:paddingBottom="8dp"
+        android:fontFamily="@font/manrope_bold" />
 
     <!-- Phone Number Text -->
     <TextView
@@ -50,7 +51,8 @@
         android:textColor="#0d141c"
         android:paddingHorizontal="16dp"
         android:paddingTop="4dp"
-        android:paddingBottom="12dp" />
+        android:paddingBottom="12dp"
+        android:fontFamily="@font/noto_sans_regular" />
 
     <!-- OTP Input Fields -->
     <LinearLayout
@@ -70,8 +72,8 @@
             android:gravity="center"
             android:textSize="16sp"
             android:textColor="#0d141c"
-            android:fontFamily="sans-serif"
-            android:layout_marginEnd="16dp"
+            android:fontFamily="@font/noto_sans_regular"
+            android:layout_marginEnd="12dp"
             style="@style/OtpEditTextStyle" />
 
         <EditText
@@ -83,8 +85,8 @@
             android:gravity="center"
             android:textSize="16sp"
             android:textColor="#0d141c"
-            android:fontFamily="sans-serif"
-            android:layout_marginEnd="16dp"
+            android:fontFamily="@font/noto_sans_regular"
+            android:layout_marginEnd="12dp"
             style="@style/OtpEditTextStyle" />
 
         <EditText
@@ -96,8 +98,8 @@
             android:gravity="center"
             android:textSize="16sp"
             android:textColor="#0d141c"
-            android:fontFamily="sans-serif"
-            android:layout_marginEnd="16dp"
+            android:fontFamily="@font/noto_sans_regular"
+            android:layout_marginEnd="12dp"
             style="@style/OtpEditTextStyle" />
 
         <EditText
@@ -109,8 +111,8 @@
             android:gravity="center"
             android:textSize="16sp"
             android:textColor="#0d141c"
-            android:fontFamily="sans-serif"
-            android:layout_marginEnd="16dp"
+            android:fontFamily="@font/noto_sans_regular"
+            android:layout_marginEnd="12dp"
             style="@style/OtpEditTextStyle" />
 
         <EditText
@@ -122,8 +124,8 @@
             android:gravity="center"
             android:textSize="16sp"
             android:textColor="#0d141c"
-            android:fontFamily="sans-serif"
-            android:layout_marginEnd="16dp"
+            android:fontFamily="@font/noto_sans_regular"
+            android:layout_marginEnd="12dp"
             style="@style/OtpEditTextStyle" />
 
         <EditText
@@ -135,7 +137,7 @@
             android:gravity="center"
             android:textSize="16sp"
             android:textColor="#0d141c"
-            android:fontFamily="sans-serif"
+            android:fontFamily="@font/noto_sans_regular"
             style="@style/OtpEditTextStyle" />
     </LinearLayout>
 
@@ -157,7 +159,8 @@
             android:text="Verify OTP"
             android:textColor="#ffffff"
             android:textSize="14sp"
-            android:textStyle="bold" />
+            android:textStyle="bold"
+            android:fontFamily="@font/manrope_bold" />
     </LinearLayout>
 
     <!-- Resend OTP Link -->
@@ -174,13 +177,8 @@
         android:textAlignment="viewStart"
         android:autoLink="none"
         android:textColorLink="#49739c"
-        android:foreground="?android:attr/selectableItemBackground" />
-
-    <!-- Spacer to push content to the top -->
-    <View
-        android:layout_width="match_parent"
-        android:layout_height="0dp"
-        android:layout_weight="1" />
+        android:foreground="?android:attr/selectableItemBackground"
+        android:fontFamily="@font/noto_sans_regular" />
 
     <!-- ProgressBar -->
     <ProgressBar

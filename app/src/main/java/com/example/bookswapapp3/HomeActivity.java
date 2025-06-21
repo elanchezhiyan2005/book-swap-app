@@ -6,6 +6,7 @@ import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.Button;
+import android.widget.ImageButton;
 import android.widget.LinearLayout;
 import android.widget.Toast;
 import androidx.appcompat.app.AlertDialog;
@@ -24,7 +25,7 @@ public class HomeActivity extends AppCompatActivity {
     private RecyclerView bookRecyclerView;
     private LinearLayout emptyStateLayout;
     private Button addBookPlaceholderButton;
-    private Button logoutButton;
+    private ImageButton logoutButton; // Changed from Button to ImageButton
     private BookAdapter bookAdapter;
     private List<Book> bookList;
     private FirebaseFirestore db;
@@ -58,7 +59,7 @@ public class HomeActivity extends AppCompatActivity {
         bookRecyclerView = findViewById(R.id.bookRecyclerView);
         emptyStateLayout = findViewById(R.id.emptyStateLayout);
         addBookPlaceholderButton = findViewById(R.id.addBookPlaceholderButton);
-        logoutButton = findViewById(R.id.logoutButton);
+        logoutButton = findViewById(R.id.logoutButton); // This will now correctly reference the ImageButton
 
         bookList = new ArrayList<>();
         bookAdapter = new BookAdapter(bookList, userPhoneNumber);

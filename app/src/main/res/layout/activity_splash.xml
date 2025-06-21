@@ -34,8 +34,8 @@
             android:textSize="28sp"
             android:textStyle="bold"
             android:layout_marginTop="16dp"
-            android:fontFamily="sans-serif-medium"
-        tools:text="Bibliobant"/>
+            android:fontFamily="@font/manrope_bold"
+            tools:text="Bibliobant"/>
 
         <!-- Slogan -->
         <TextView
@@ -45,8 +45,8 @@
             android:textColor="@color/black"
             android:textSize="16sp"
             android:layout_marginTop="8dp"
-            android:fontFamily="sans-serif"
-        tools:text="Share books, spread knowledge"/>
+            android:fontFamily="@font/noto_sans_regular"
+            tools:text="Share books, spread knowledge"/>
     </LinearLayout>
 
 </androidx.constraintlayout.widget.ConstraintLayout>
