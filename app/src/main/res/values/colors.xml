@@ -14,4 +14,5 @@
     <color name="border">#e6e9f4</color>
     <color name="button_add_new_book">#4264ff</color>
     <color name="button_light">#e6e9f4</color>
+    <color name="accent">#A3BFFA</color>
 </resources>

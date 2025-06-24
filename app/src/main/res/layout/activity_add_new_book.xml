@@ -6,7 +6,6 @@
     android:orientation="vertical"
     android:background="@color/background">
 
-    <!-- Header -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
@@ -15,7 +14,6 @@
         android:padding="16dp"
         android:paddingBottom="8dp">
 
-        <!-- Back Arrow -->
         <ImageButton
             android:id="@+id/backButton"
             android:layout_width="48dp"
@@ -26,7 +24,6 @@
             android:padding="12dp"
             android:scaleType="fitCenter" />
 
-        <!-- Title -->
         <TextView
             android:layout_width="0dp"
             android:layout_height="wrap_content"
@@ -39,7 +36,6 @@
             android:fontFamily="@font/manrope_bold" />
     </LinearLayout>
 
-    <!-- Scrollable Content -->
     <ScrollView
         android:layout_width="match_parent"
         android:layout_height="match_parent"
@@ -51,7 +47,6 @@
             android:orientation="vertical"
             android:padding="16dp">
 
-            <!-- ISBN Radio Buttons -->
             <RadioGroup
                 android:id="@+id/isbnRadioGroup"
                 android:layout_width="match_parent"
@@ -86,7 +81,6 @@
                     android:fontFamily="@font/noto_sans_regular" />
             </RadioGroup>
 
-            <!-- ISBN Input Section -->
             <LinearLayout
                 android:id="@+id/isbnFetchLayout"
                 android:layout_width="match_parent"
@@ -133,7 +127,6 @@
                     android:fontFamily="@font/manrope_bold" />
             </LinearLayout>
 
-            <!-- Book Details Inputs -->
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
@@ -301,7 +294,6 @@
                 android:layout_marginBottom="8dp"
                 android:fontFamily="@font/noto_sans_regular" />
 
-            <!-- Action Selection -->
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
@@ -358,7 +350,6 @@
                 </RadioGroup>
             </LinearLayout>
 
-            <!-- Save and Cancel Buttons -->
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
@@ -394,7 +385,6 @@
         </LinearLayout>
     </ScrollView>
 
-    <!-- Loading Overlay -->
     <FrameLayout
         android:id="@+id/loadingOverlay"
         android:layout_width="match_parent"
@@ -402,12 +392,13 @@
         android:background="#80000000"
         android:visibility="gone">
 
-        <ProgressBar
+        <com.google.android.material.progressindicator.CircularProgressIndicator
             android:id="@+id/loadingProgressBar"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
+            android:layout_width="64dp"
+            android:layout_height="64dp"
             android:layout_gravity="center"
-            android:indeterminateTint="#A3BFFA"
+            android:indeterminate="true"
+            android:indeterminateTint="@color/accent"
             android:visibility="gone" />
     </FrameLayout>
 </LinearLayout>

@@ -65,6 +65,6 @@ dependencies {
     implementation 'com.google.firebase:firebase-appcheck-playintegrity:17.0.0'
     implementation 'com.google.firebase:firebase-appcheck-debug:17.0.0'
     implementation 'com.google.android.recaptcha:recaptcha:18.2.1'
-
+    implementation 'com.google.android.material:material:1.9.0'
 
 }

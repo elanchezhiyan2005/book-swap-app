@@ -14,11 +14,15 @@ import android.provider.Settings;
 import android.util.Log;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.animation.AccelerateDecelerateInterpolator;
+import android.view.animation.Animation;
+import android.view.animation.AnimationUtils;
 import android.widget.*;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
+import androidx.interpolator.view.animation.FastOutSlowInInterpolator;
 import com.google.android.gms.location.FusedLocationProviderClient;
 import com.google.android.gms.location.LocationServices;
 import com.google.android.material.snackbar.Snackbar;
@@ -55,7 +59,7 @@ public class AddNewBookActivity extends AppCompatActivity {
     private String fetchedImageUrl;
     private volatile boolean isFinishing;
     private String selectedAction;
-    private boolean isSaveValid = false; // New flag to track validation
+    private boolean isSaveValid = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -149,7 +153,8 @@ public class AddNewBookActivity extends AppCompatActivity {
             if (isbnCode.isEmpty()) {
                 Toast.makeText(this, "Please enter a valid ISBN", Toast.LENGTH_SHORT).show();
             } else {
-                showLoadingOverlay();
+                animateSaveButton();
+                showLoadingOverlayWithAnimation();
                 fetchDetailsButton.setEnabled(false);
                 new FetchBookDetailsTask().execute(isbnCode);
             }
@@ -157,10 +162,11 @@ public class AddNewBookActivity extends AppCompatActivity {
 
         saveButton.setOnClickListener(v -> {
             if (validateInputs()) {
-                isSaveValid = true; // Set flag to allow save
+                isSaveValid = true;
+                animateSaveButton();
                 getLocationAndSaveBook();
             } else {
-                isSaveValid = false; // Ensure save is blocked
+                isSaveValid = false;
             }
         });
 
@@ -263,7 +269,7 @@ public class AddNewBookActivity extends AppCompatActivity {
                         if (location != null) {
                             latitude = location.getLatitude();
                             longitude = location.getLongitude();
-                            if (isSaveValid) saveBookDetails(); // Only proceed if validation passed
+                            if (isSaveValid) saveBookDetails();
                         } else {
                             showErrorSnackbar("Failed to get location. Ensure GPS is enabled and try again.");
                             Log.e("LocationError", "Location is null");
@@ -315,7 +321,7 @@ public class AddNewBookActivity extends AppCompatActivity {
             imageUrl = "https://via.placeholder.com/150";
         }
 
-        showLoadingOverlay();
+        showLoadingOverlayWithAnimation();
         saveButton.setEnabled(false);
         cancelButton.setEnabled(false);
         fetchDetailsButton.setEnabled(false);
@@ -379,12 +385,7 @@ public class AddNewBookActivity extends AppCompatActivity {
                 batch.commit()
                         .addOnSuccessListener(aVoid -> runOnUiThread(() -> {
                             hideLoadingOverlay();
-                            Toast toast = new Toast(this);
-                            View toastView = getLayoutInflater().inflate(R.layout.toast_success, (ViewGroup) findViewById(android.R.id.content), false);
-                            toast.setView(toastView);
-                            toast.setDuration(Toast.LENGTH_LONG);
-                            toast.show();
-
+                            showSuccessAnimation();
                             saveButton.setEnabled(true);
                             cancelButton.setEnabled(true);
                             fetchDetailsButton.setEnabled(true);
@@ -402,6 +403,7 @@ public class AddNewBookActivity extends AppCompatActivity {
                             showErrorSnackbar("Failed to add book: " + e.getMessage()).setAction("Retry", v -> {
                                 if (validateInputs()) {
                                     isSaveValid = true;
+                                    animateSaveButton();
                                     getLocationAndSaveBook();
                                 }
                             });
@@ -418,6 +420,7 @@ public class AddNewBookActivity extends AppCompatActivity {
                 showErrorSnackbar("Error saving book: " + e.getMessage()).setAction("Retry", v -> {
                     if (validateInputs()) {
                         isSaveValid = true;
+                        animateSaveButton();
                         getLocationAndSaveBook();
                     }
                 });
@@ -663,17 +666,63 @@ public class AddNewBookActivity extends AppCompatActivity {
         }
     }
 
-    private void showLoadingOverlay() {
+    private void showLoadingOverlayWithAnimation() {
         runOnUiThread(() -> {
             loadingOverlay.setVisibility(View.VISIBLE);
+            Animation fadeIn = AnimationUtils.loadAnimation(this, android.R.anim.fade_in);
+            fadeIn.setDuration(300);
+            loadingOverlay.startAnimation(fadeIn);
             loadingProgressBar.setVisibility(View.VISIBLE);
+            Animation rotate = AnimationUtils.loadAnimation(this, R.anim.rotate);
+            loadingProgressBar.startAnimation(rotate);
         });
     }
 
     private void hideLoadingOverlay() {
         runOnUiThread(() -> {
-            loadingOverlay.setVisibility(View.GONE);
-            loadingProgressBar.setVisibility(View.GONE);
+            Animation fadeOut = AnimationUtils.loadAnimation(this, android.R.anim.fade_out);
+            fadeOut.setDuration(300);
+            fadeOut.setAnimationListener(new Animation.AnimationListener() {
+                @Override
+                public void onAnimationStart(Animation animation) {}
+                @Override
+                public void onAnimationEnd(Animation animation) {
+                    loadingOverlay.setVisibility(View.GONE);
+                    loadingProgressBar.setVisibility(View.GONE);
+                    loadingProgressBar.clearAnimation();
+                }
+                @Override
+                public void onAnimationRepeat(Animation animation) {}
+            });
+            loadingOverlay.startAnimation(fadeOut);
+        });
+    }
+
+    private void animateSaveButton() {
+        runOnUiThread(() -> {
+            Animation scaleUp = AnimationUtils.loadAnimation(this, R.anim.scale_up);
+            scaleUp.setInterpolator(new FastOutSlowInInterpolator());
+            scaleUp.setDuration(200);
+            saveButton.startAnimation(scaleUp);
+        });
+    }
+
+    private void showSuccessAnimation() {
+        runOnUiThread(() -> {
+            Toast toast = new Toast(this);
+            View toastView = getLayoutInflater().inflate(R.layout.toast_success, (ViewGroup) findViewById(android.R.id.content), false);
+            ImageView checkmark = toastView.findViewById(R.id.checkmark);
+            if (checkmark != null) {
+                Animation bounce = AnimationUtils.loadAnimation(this, R.anim.bounce);
+                checkmark.setImageResource(R.drawable.ic_checkmark); // Static checkmark
+                checkmark.startAnimation(bounce);
+            }
+            toast.setView(toastView);
+            toast.setDuration(Toast.LENGTH_LONG);
+            toast.show();
+
+            Animation bounceToast = AnimationUtils.loadAnimation(this, R.anim.bounce);
+            toastView.startAnimation(bounceToast);
         });
     }
 
